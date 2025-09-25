@@ -28,4 +28,8 @@ public class Product : AggregateRoot
 		_modifierGroups.Add(modifierGroup);
 		return Result.Success;
 	}
+
+	public Product()
+	{
+	}
 }

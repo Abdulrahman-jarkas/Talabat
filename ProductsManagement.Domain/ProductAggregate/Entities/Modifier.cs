@@ -32,4 +32,8 @@ public class Modifier : Entity
 		_modifierGroupIds.Add(modifierGroupId);
 		return new Modifier(Title, Price, _modifierGroupIds);
 	}
+
+	public Modifier()
+	{
+	}
 }

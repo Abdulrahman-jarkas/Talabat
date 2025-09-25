@@ -30,4 +30,8 @@ public class ModifierGroup : Entity
 		_modifierIds.Add(modifier);
 		return Result.Success;
 	}
+
+	public ModifierGroup()
+	{
+	}
 }

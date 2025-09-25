@@ -11,8 +11,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 		builder.HasKey(p => p.Id);
 
 		builder.HasMany(p => p.ModifierGroups)
-			.WithMany()
-			.UsingEntity(j => j.ToTable("ProductModifierGroups"));
+			.WithMany();
 
 		builder.Property(p => p.Title);
 		builder.Property(p => p.BasePrice)
