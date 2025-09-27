@@ -53,19 +53,14 @@ public static class ProductMapper
 		);
 	}
 
-	private static ModifierGroup ToDomain(this GroupDto groupDto)
+	public static ModifierGroup ToDomain(this GroupDto groupDto)
 	{
-		// First map all modifiers from options
-		var modifiers = new List<Modifier>();
 		var modifierIds = new List<Guid>();
 
-		foreach (var option in groupDto.Options)
+		foreach (var optionDto in groupDto.Options)
 		{
-			var optionModifiers = option.ToDomain();
-			modifiers.AddRange(optionModifiers);
-
-			// Collect their IDs
-			modifierIds.AddRange(optionModifiers.Select(m => m.Id));
+			var option = optionDto.ToDomain();
+			modifierIds.Add(option.Id);
 		}
 
 		// Create the ModifierGroup with collected modifier IDs
@@ -79,26 +74,20 @@ public static class ProductMapper
 		return group;
 	}
 
-	private static List<Modifier> ToDomain(this OptionDto optionDto)
+	public static Modifier ToDomain(this OptionDto optionDto)
 	{
-		// Generate a new Modifier
-		var modifier = new Modifier(
-			optionDto.Title,
-			optionDto.Price,
-			new List<Guid>() // will be filled by group mapping if needed
-		);
+		var groupsIds = new List<Guid>();
 
-		var modifiers = new List<Modifier> { modifier };
-
-		// Handle nested groups recursively
-		foreach (var nestedGroup in optionDto.Groups)
+		foreach(var groupDto in optionDto.Groups)
 		{
-			var nestedGroupDomain = nestedGroup.ToDomain();
+			var group = groupDto.ToDomain();
 
-			// Link modifier to the nested group
-			modifier.AddModifierGroup(nestedGroupDomain.Id);
+			groupsIds.Add(group.Id);
 		}
 
-		return modifiers;
+		return new Modifier(
+			title: optionDto.Title,
+			price: optionDto.Price,
+			groupsIds);
 	}
 }

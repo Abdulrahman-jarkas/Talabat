@@ -13,6 +13,7 @@ public static class DependencyInjection
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPersistence(configuration);
+
 		return services;
 	}
 
@@ -26,13 +27,6 @@ public static class DependencyInjection
 		services.AddScoped<IProductsRepository, ProductsRepository>();
 		services.AddScoped<IProductService, ProductService>();
 
-		return services;
-	}
-
-	public static IServiceCollection AddEndpoints(this IServiceCollection services)
-	{
-		services.AddFastEndpoints();
-		// app.UseFastEndpoints();
 		return services;
 	}
 }

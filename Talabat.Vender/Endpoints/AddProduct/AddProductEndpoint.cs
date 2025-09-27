@@ -1,9 +1,10 @@
 ﻿using FastEndpoints;
 using Talabat.Vender.Mappers;
+using Talabat.Vender.Services;
 
 namespace Talabat.Vender.Endpoints.AddProduct;
 
-public class AddProductEndpoint : Endpoint<AddProductRequest>
+public class AddProductEndpoint(IProductService productService) : Endpoint<AddProductRequest>
 {
 	public override void Configure()
 	{
@@ -11,9 +12,10 @@ public class AddProductEndpoint : Endpoint<AddProductRequest>
 		AllowAnonymous();
 	}
 
-	public override Task HandleAsync(AddProductRequest req, CancellationToken ct)
+	public override async Task HandleAsync(AddProductRequest req, CancellationToken ct)
 	{
 		var product = req.ToDto();
-		return base.HandleAsync(req, ct);
+
+		await productService.AddProduct(product);
 	}
 }

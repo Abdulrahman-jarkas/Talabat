@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Talabat.Vender.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Talabat.Vender.Infrastructure.Persistence;
 namespace Talabat.Vender.Data
 {
     [DbContext(typeof(ProductsManagementDbContext))]
-    partial class ProductsManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250925194212_Test")]
+    partial class Test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
