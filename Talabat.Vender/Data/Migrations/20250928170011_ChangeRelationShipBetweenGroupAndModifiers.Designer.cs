@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Talabat.Vender.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Talabat.Vender.Data
+namespace Talabat.Vender.Data.Migrations
 {
     [DbContext(typeof(ProductsManagementDbContext))]
-    partial class ProductsManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250928170011_ChangeRelationShipBetweenGroupAndModifiers")]
+    partial class ChangeRelationShipBetweenGroupAndModifiers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,10 +46,6 @@ namespace Talabat.Vender.Data
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.PrimitiveCollection<Guid[]>("ModifierGroupIds")
-                        .IsRequired()
-                        .HasColumnType("uuid[]");
-
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -72,17 +71,13 @@ namespace Talabat.Vender.Data
                     b.Property<int>("Min")
                         .HasColumnType("integer");
 
-                    b.PrimitiveCollection<Guid[]>("ModifierIds")
-                        .IsRequired()
-                        .HasColumnType("uuid[]");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ModifierGroups");
+                    b.ToTable("ModifierGroup");
                 });
 
             modelBuilder.Entity("Talabat.Vender.Domain.ProductAggregate.Product", b =>
@@ -116,6 +111,30 @@ namespace Talabat.Vender.Data
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Talabat.Vender.Domain.ProductAggregate.Entities.ModifierGroup", b =>
+                {
+                    b.OwnsOne("Talabat.Vender.Domain.ProductAggregate.Entities.ModifierGroupData", "Data", b1 =>
+                        {
+                            b1.Property<Guid>("ModifierGroupId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ModifierGroupItems")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("Data");
+
+                            b1.HasKey("ModifierGroupId");
+
+                            b1.ToTable("ModifierGroup");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ModifierGroupId");
+                        });
+
+                    b.Navigation("Data")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

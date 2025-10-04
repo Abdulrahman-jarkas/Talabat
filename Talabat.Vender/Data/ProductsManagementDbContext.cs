@@ -8,8 +8,8 @@ namespace Talabat.Vender.Infrastructure.Persistence;
 public class ProductsManagementDbContext : DbContext
 {
 	public DbSet<Product> Products { get; set; }
-	public DbSet<ModifierGroup> ModifierGroups { get; set; }
 	public DbSet<Modifier> Modifiers { get; set; }
+	public DbSet<ModifierGroup> ModifierGroups { get; set; }
 
 	public ProductsManagementDbContext(DbContextOptions options) : base(options)
 	{

@@ -10,11 +10,10 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 	{
 		builder.HasKey(p => p.Id);
 
-		builder.HasMany(p => p.ModifierGroups)
-			.WithMany();
-
 		builder.Property(p => p.Title);
 		builder.Property(p => p.BasePrice)
 			.HasPrecision(18, 2);
-	}
+
+		builder.HasMany(p => p.ModifierGroups)
+			.WithMany();	}
 }

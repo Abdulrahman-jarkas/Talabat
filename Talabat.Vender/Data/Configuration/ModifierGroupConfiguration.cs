@@ -14,9 +14,12 @@ public class ModifierGroupConfiguration : IEntityTypeConfiguration<ModifierGroup
 		builder.Property(p => p.Min);
 		builder.Property(p => p.Max);
 
-		//@TODO: use custom converter so if we change the database type then we need only to change one place
-		builder.Property(p => p.ModifierIds)
-			.HasColumnType("uuid[]"); // for postgres only
+		builder.OwnsOne(d => d.Data, c =>
+		{
+			c.Property(c => c.ModifierGroupItems)
+			.HasColumnName("Data")
+			.HasValueJsonConverter();
+		});
 	}
 }
 

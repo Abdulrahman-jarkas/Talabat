@@ -1,10 +1,10 @@
-﻿using FastEndpoints;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Talabat.Vender.Application;
 using Talabat.Vender.Infrastructure.Persistence;
 using Talabat.Vender.Infrastructure.Persistence.Repositories;
-using Talabat.Vender.Services;
+using Talabat.Vender.Interfaces;
 
 namespace Talabat.Vender;
 

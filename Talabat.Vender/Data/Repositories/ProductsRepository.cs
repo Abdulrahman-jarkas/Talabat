@@ -1,5 +1,7 @@
-﻿using Talabat.Vender.Domain.ProductAggregate;
+﻿using Microsoft.EntityFrameworkCore;
+using Talabat.Vender.Domain.ProductAggregate;
 using Talabat.Vender.Domain.ProductAggregate.Entities;
+using Talabat.Vender.Interfaces;
 
 namespace Talabat.Vender.Infrastructure.Persistence.Repositories;
 
@@ -17,15 +19,25 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		return Task.CompletedTask;
 	}
 
+	public Task<List<ModifierGroup>> GetModifierGroups(List<Guid> ids)
+	{
+		return context.ModifierGroups.Where(g => ids.Contains(g.Id)).ToListAsync();
+	}
+
 	public Task AddModifier(Modifier modifier)
 	{
 		context.Modifiers.Add(modifier);
 		return Task.CompletedTask;
 	}
 
+	public Task<Product?> GetById(Guid id)
+	{
+		return context.Products
+			.FirstOrDefaultAsync(p => p.Id == id);
+	}
+
 	public Task SaveChanges()
 	{
-		Console.WriteLine(context.ChangeTracker);
 		return context.SaveChangesAsync();
 	}
 }

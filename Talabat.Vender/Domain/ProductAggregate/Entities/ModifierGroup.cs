@@ -5,33 +5,46 @@ namespace Talabat.Vender.Domain.ProductAggregate.Entities;
 
 public class ModifierGroup : Entity
 {
-	public string Title { get; set; } = string.Empty;
-	public int Min { get; private set; }
-	public int Max { get; private set; }
-
-	private readonly List<Guid> _modifierIds = new();
-	public IReadOnlyList<Guid> ModifierIds => _modifierIds.AsReadOnly();
+	public string Title { get; init; } = string.Empty;
+	public int Min { get; init; }
+	public int Max { get; init; }
+	public ModifierGroupData Data { get; private set; }
 
 	public ModifierGroup(
 		string title,
 		int min,
 		int max,
-		List<Guid> modifierIds
+		ModifierGroupData modifierGroupData
 		)
 	{
 		Title = title;
 		Min = min;
 		Max = max;
-		_modifierIds = modifierIds;
-	}
-
-	public ErrorOr<Success> AddModifier(Guid modifier)
-	{
-		_modifierIds.Add(modifier);
-		return Result.Success;
+		Data = modifierGroupData;
 	}
 
 	public ModifierGroup()
 	{
+	}
+}
+
+public class ModifierGroupItem
+{
+	public Guid ModifierId { get; init; }
+	public List<Guid> GroupIds { get; init; } = new();
+}
+
+public class ModifierGroupData : ValueObject
+{
+	public List<ModifierGroupItem> ModifierGroupItems { get; init; } = new();
+
+	public ModifierGroupData(List<ModifierGroupItem> modifierGroupItems)
+	{
+		ModifierGroupItems = modifierGroupItems;
+	}
+
+	public override IEnumerable<object> GetEqualityComponents()
+	{
+		yield return ModifierGroupItems;
 	}
 }

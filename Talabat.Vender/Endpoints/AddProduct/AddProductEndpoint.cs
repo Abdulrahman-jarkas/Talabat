@@ -1,10 +1,10 @@
 ﻿using FastEndpoints;
-using Talabat.Vender.Mappers;
-using Talabat.Vender.Services;
+using Talabat.Vender.Application;
+using Talabat.Vender.Endpoints.GetProduct;
 
 namespace Talabat.Vender.Endpoints.AddProduct;
 
-public class AddProductEndpoint(IProductService productService) : Endpoint<AddProductRequest>
+public class AddProductEndpoint(IProductService productService) : Endpoint<AddProductRequest, ProductDto>
 {
 	public override void Configure()
 	{
@@ -16,6 +16,8 @@ public class AddProductEndpoint(IProductService productService) : Endpoint<AddPr
 	{
 		var product = req.ToDto();
 
-		await productService.AddProduct(product);
+		await productService.Add(product);
+
+		await Send.CreatedAtAsync(nameof(GetProductEndpoint), new { product.Id });
 	}
 }
