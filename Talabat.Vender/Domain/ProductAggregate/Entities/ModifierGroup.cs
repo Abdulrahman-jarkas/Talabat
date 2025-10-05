@@ -1,5 +1,4 @@
-﻿using ErrorOr;
-using Talabat.Vender.Core.Common;
+﻿using Talabat.Vender.Core.Common;
 
 namespace Talabat.Vender.Domain.ProductAggregate.Entities;
 
@@ -30,8 +29,8 @@ public class ModifierGroup : Entity
 
 public class ModifierGroupItem
 {
-	public Guid ModifierId { get; init; }
-	public List<Guid> GroupIds { get; init; } = new();
+	public int ModifierId { get; init; }
+	public List<int> GroupIds { get; init; } = new();
 }
 
 public class ModifierGroupData : ValueObject

@@ -2,7 +2,7 @@ namespace Talabat.Vender.Core.Common;
 
 public abstract class Entity
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public int Id { get; init; }
 
     public override bool Equals(object? other)
     {
@@ -19,7 +19,7 @@ public abstract class Entity
         return Id.GetHashCode();
     }
 
-    protected Entity(Guid id) => Id = id;
+    protected Entity(int id) => Id = id;
 
     protected Entity() { }
 }

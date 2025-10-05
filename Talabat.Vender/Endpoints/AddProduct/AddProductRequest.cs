@@ -4,5 +4,5 @@ public class AddProductRequest
 {
 	public string Title { get; set; } = string.Empty;
 	public decimal Price { get; set; }
-	public List<Guid> GroupIds { get; set; } = new();
+	public List<int> GroupIds { get; set; } = new();
 }

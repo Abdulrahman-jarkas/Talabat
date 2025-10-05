@@ -45,7 +45,7 @@ public class ProductService(IProductsRepository productsRepository) : IProductSe
 		await productsRepository.SaveChanges();
 	}
 
-	public async Task<ProductDto?> GetById(Guid id)
+	public async Task<ProductDto?> GetById(int id)
 	{
 		var product = await productsRepository.GetById(id);
 

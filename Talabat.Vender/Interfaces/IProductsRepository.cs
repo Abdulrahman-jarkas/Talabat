@@ -6,9 +6,9 @@ namespace Talabat.Vender.Interfaces;
 public interface IProductsRepository
 {
 	Task Add(Product product);
-	Task<Product?> GetById(Guid id);
+	Task<Product?> GetById(int id);
 	Task AddModifierGroup(ModifierGroup modifierGroup);
 	Task AddModifier(Modifier modifier);
-	Task<List<ModifierGroup>> GetModifierGroups(List<Guid> ids);
+	Task<List<ModifierGroup>> GetModifierGroups(List<int> ids);
 	Task SaveChanges();
 }

@@ -1,50 +1,52 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Talabat.Vender.Data
+namespace Talabat.Vender.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitRelationalTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Modifier",
+                name: "ModifierGroups",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    ModifierGroupIds = table.Column<Guid[]>(type: "uuid[]", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Modifier", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ModifierGroup",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Min = table.Column<int>(type: "integer", nullable: false),
                     Max = table.Column<int>(type: "integer", nullable: false),
-                    ModifierIds = table.Column<Guid[]>(type: "uuid[]", nullable: false)
+                    Data = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ModifierGroup", x => x.Id);
+                    table.PrimaryKey("PK_ModifierGroups", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Modifiers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Modifiers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "text", nullable: false),
                     BasePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
                 },
@@ -57,16 +59,16 @@ namespace Talabat.Vender.Data
                 name: "ModifierGroupProduct",
                 columns: table => new
                 {
-                    ModifierGroupsId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false)
+                    ModifierGroupsId = table.Column<int>(type: "integer", nullable: false),
+                    ProductId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ModifierGroupProduct", x => new { x.ModifierGroupsId, x.ProductId });
                     table.ForeignKey(
-                        name: "FK_ModifierGroupProduct_ModifierGroup_ModifierGroupsId",
+                        name: "FK_ModifierGroupProduct_ModifierGroups_ModifierGroupsId",
                         column: x => x.ModifierGroupsId,
-                        principalTable: "ModifierGroup",
+                        principalTable: "ModifierGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -87,13 +89,13 @@ namespace Talabat.Vender.Data
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Modifier");
-
-            migrationBuilder.DropTable(
                 name: "ModifierGroupProduct");
 
             migrationBuilder.DropTable(
-                name: "ModifierGroup");
+                name: "Modifiers");
+
+            migrationBuilder.DropTable(
+                name: "ModifierGroups");
 
             migrationBuilder.DropTable(
                 name: "Products");

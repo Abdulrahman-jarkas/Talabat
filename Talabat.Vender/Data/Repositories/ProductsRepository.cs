@@ -19,7 +19,7 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		return Task.CompletedTask;
 	}
 
-	public Task<List<ModifierGroup>> GetModifierGroups(List<Guid> ids)
+	public Task<List<ModifierGroup>> GetModifierGroups(List<int> ids)
 	{
 		return context.ModifierGroups.Where(g => ids.Contains(g.Id)).ToListAsync();
 	}
@@ -30,9 +30,10 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		return Task.CompletedTask;
 	}
 
-	public Task<Product?> GetById(Guid id)
+	public Task<Product?> GetById(int id)
 	{
 		return context.Products
+			.Include(p => p.ModifierGroups)
 			.FirstOrDefaultAsync(p => p.Id == id);
 	}
 

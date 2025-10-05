@@ -27,8 +27,8 @@ public class AddProductValidation : AbstractValidator<AddProductRequest>
 			.WithMessage("Duplicate group IDs are not allowed.");
 
 		RuleForEach(p => p.GroupIds)
-			.NotEqual(Guid.Empty)
-			.WithMessage("Group ID must be a valid non-empty GUID.");
+			.NotEmpty()
+			.WithMessage("Group ID must be a valid Id");
 
 	}
 }

@@ -49,8 +49,8 @@ public class ModifierGroupItemValidation : AbstractValidator<AddModifierGroupReq
 			.Must(ids => ids == null || ids.Distinct().Count() == ids.Count)
 			.WithMessage("Duplicate group IDs are not allowed.");
 
-		RuleForEach(p => p.GroupIds ?? new List<Guid>())
-			.NotEqual(Guid.Empty)
+		RuleForEach(p => p.GroupIds ?? new List<int>())
+			.NotEqual(0)
 			.WithMessage("Group ID must be a valid non-empty GUID.");
 	}
 }

@@ -10,7 +10,7 @@ public class AddModifierGroupRequest
 
 	public class ModifierGroupItem
 	{
-		public Guid ModifierId { get; set; }
-		public List<Guid> GroupIds { get; set; } = new();
+		public int ModifierId { get; set; }
+		public List<int> GroupIds { get; set; } = new();
 	}
 }
