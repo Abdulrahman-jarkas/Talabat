@@ -3,7 +3,7 @@ using Talabat.Vender.Application;
 
 namespace Talabat.Vender.Endpoints.GetProduct;
 
-public class GetProductEndpoint(IProductService productService) : Endpoint<GetProductRequest, ProductDto>
+public class GetProductEndpoint(IProductService productService) : Endpoint<GetProductRequest, ProductDetailsDto>
 {
 	public override void Configure()
 	{

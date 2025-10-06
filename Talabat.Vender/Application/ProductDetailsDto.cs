@@ -5,7 +5,8 @@ public class ProductDetailsDto
 	public int Id { get; set; }
 	public string Title { get; set; } = string.Empty;
 	public decimal Price { get; set; }
-	
+	public List<GroupDetailsDto> Groups { get; set; } = new();
+
 
 	public class GroupDetailsDto
 	{
@@ -13,7 +14,7 @@ public class ProductDetailsDto
 		public string Title { get; set; } = string.Empty;
 		public int Min { get; set; }
 		public int Max { get; set; }
-		List<ModifierDetailsDto> Modifiers { get; set; } = new();
+		public List<ModifierDetailsDto> Modifiers { get; set; } = new();
 	}
 
 	public class ModifierDetailsDto
@@ -21,7 +22,7 @@ public class ProductDetailsDto
 		public int Id { get; set; }
 		public string Title { get; set; } = string.Empty;
 		public decimal Price { get; set; }
-		List<GroupDetailsDto> Groups { get; set; } = new();
+		public List<GroupDetailsDto> Groups { get; set; } = new();
 	}
 }
 

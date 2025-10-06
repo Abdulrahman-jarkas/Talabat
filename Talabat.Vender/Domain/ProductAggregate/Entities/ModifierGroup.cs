@@ -1,4 +1,5 @@
 ﻿using Talabat.Vender.Core.Common;
+using static Talabat.Vender.Endpoints.AddModifierGroup.AddModifierGroupRequest;
 
 namespace Talabat.Vender.Domain.ProductAggregate.Entities;
 
@@ -27,10 +28,16 @@ public class ModifierGroup : Entity
 	}
 }
 
-public class ModifierGroupItem
+public class ModifierGroupItem : ValueObject
 {
 	public int ModifierId { get; init; }
 	public List<int> GroupIds { get; init; } = new();
+
+	public override IEnumerable<object> GetEqualityComponents()
+	{
+		yield return ModifierId;
+		yield return GroupIds;
+	}
 }
 
 public class ModifierGroupData : ValueObject
