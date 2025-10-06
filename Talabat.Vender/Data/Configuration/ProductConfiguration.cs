@@ -15,24 +15,31 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 		builder.Property(p => p.BasePrice)
 			.HasPrecision(18, 2);
 
-		builder.HasMany(p => p.ModifierGroups)
-			.WithMany()
-			.UsingEntity<Dictionary<string, object>>(
-				"ProductsModifierGroups",
-				j => j
-					.HasOne<ModifierGroup>()
-					.WithMany()
-					.HasForeignKey("ModifierGroupId")
-					.OnDelete(DeleteBehavior.Cascade),
-				j => j
-					.HasOne<Product>()
-					.WithMany()
-					.HasForeignKey("ProductId")
-					.OnDelete(DeleteBehavior.Cascade),
-				j =>
-				{
-					j.HasKey("ProductId", "ModifierGroupId");
-					j.ToTable("ProductsModifierGroups");
-				});
+		builder.OwnsOne(d => d.Customization, c =>
+		{
+			c.Property(c => c.ModifierGroups)
+			  .HasColumnName("Data")
+			  .HasValueJsonConverter();
+		});
+
+		//builder.HasMany(p => p.ModifierGroups)
+		//	.WithMany()
+		//	.UsingEntity<Dictionary<string, object>>(
+		//		"ProductsModifierGroups",
+		//		j => j
+		//			.HasOne<ModifierGroup>()
+		//			.WithMany()
+		//			.HasForeignKey("ModifierGroupId")
+		//			.OnDelete(DeleteBehavior.Cascade),
+		//		j => j
+		//			.HasOne<Product>()
+		//			.WithMany()
+		//			.HasForeignKey("ProductId")
+		//			.OnDelete(DeleteBehavior.Cascade),
+		//		j =>
+		//		{
+		//			j.HasKey("ProductId", "ModifierGroupId");
+		//			j.ToTable("ProductsModifierGroups");
+		//		});
 	}
 }

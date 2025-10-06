@@ -8,9 +8,9 @@ public interface IProductsRepository
 {
 	Task Add(Product product);
 	Task<Product?> GetById(int id);
-	Task AddModifierGroup(ModifierGroup modifierGroup);
+	//Task AddModifierGroup(ModifierGroup modifierGroup);
 	Task AddModifier(Modifier modifier);
-	Task<List<ModifierGroup>> GetModifierGroups(IEnumerable<int> ids);
+	//Task<List<ModifierGroup>> GetModifierGroups(IEnumerable<int> ids);
 	Task<List<Modifier>> GetModifiers(IEnumerable<int> ids);
 	Task SaveChanges();
 }

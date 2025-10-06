@@ -15,6 +15,5 @@ public class AddModifierEndpoint(IProductService productService) : Endpoint<AddM
 	{
 		await productService.AddModifier(req.ToDto());
 		await Send.OkAsync();
-		//await Send.CreatedAtAsync()
 	}
 }

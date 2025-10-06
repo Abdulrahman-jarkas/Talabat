@@ -1,56 +1,65 @@
 ﻿using Talabat.Vender.Core.Common;
-using static Talabat.Vender.Endpoints.AddModifierGroup.AddModifierGroupRequest;
 
 namespace Talabat.Vender.Domain.ProductAggregate.Entities;
 
-public class ModifierGroup : Entity
+public class ModifierGroup : ValueObject
 {
 	public string Title { get; init; } = string.Empty;
 	public int Min { get; init; }
 	public int Max { get; init; }
-	public ModifierGroupData Data { get; private set; }
+	public List<ModifierGroupItem> Items { get; init; } = new();
 
 	public ModifierGroup(
 		string title,
 		int min,
 		int max,
-		ModifierGroupData modifierGroupData
+		List<ModifierGroupItem> items
 		)
 	{
 		Title = title;
 		Min = min;
 		Max = max;
-		Data = modifierGroupData;
+		Items = items;
 	}
 
-	public ModifierGroup()
+	public override IEnumerable<object> GetEqualityComponents()
 	{
+		yield return Items;
+		yield return Title;
+		yield return Min;
+		yield return Max;
 	}
 }
 
 public class ModifierGroupItem : ValueObject
 {
 	public int ModifierId { get; init; }
-	public List<int> GroupIds { get; init; } = new();
+	public List<ModifierSubGroup> SubGroups { get; init; } = new();
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
 		yield return ModifierId;
-		yield return GroupIds;
+		yield return SubGroups;
 	}
 }
 
-public class ModifierGroupData : ValueObject
+public class ModifierSubGroup : ValueObject
 {
-	public List<ModifierGroupItem> ModifierGroupItems { get; init; } = new();
+	public string Title { get; set; } = string.Empty;
+	public int Min { get; set; }
+	public int Max { get; set; }
+	public List<int> ModifierIds { get; init; } = new();
 
-	public ModifierGroupData(List<ModifierGroupItem> modifierGroupItems)
+	public ModifierSubGroup(List<int> modifierIds)
 	{
-		ModifierGroupItems = modifierGroupItems;
+		ModifierIds = modifierIds;
 	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return ModifierGroupItems;
+		yield return ModifierIds;
+		yield return Title;
+		yield return Min;
+		yield return Max;
 	}
 }

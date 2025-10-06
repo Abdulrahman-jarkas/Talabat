@@ -22,13 +22,13 @@ public class AddModifierGroupValidation : AbstractValidator<AddModifierGroupRequ
 		RuleFor(p => p.Max)
 			.GreaterThan(0)
 			.WithMessage("Min must be greater than 0.")
-			.LessThanOrEqualTo(p => p.Data.Count)
+			.LessThanOrEqualTo(p => p.Items.Count)
 			.WithMessage("Max must be less than or equal to the number of options.")
 			.GreaterThanOrEqualTo(p => p.Min)
 			.WithMessage("Max must be greater than or equal to Min.");
 
 
-		RuleFor(p => p.Data)
+		RuleFor(p => p.Items)
 			.NotNull()
 			.WithMessage("Should have at least one modifier")
 			.NotEmpty()
@@ -36,7 +36,7 @@ public class AddModifierGroupValidation : AbstractValidator<AddModifierGroupRequ
 			.Must(items => items.Select(i => i.ModifierId).Distinct().Count() == items.Count())
 			.WithMessage("Duplicate Modifiers are not allowed.");
 
-		RuleForEach(p => p.Data)
+		RuleForEach(p => p.Items)
 			.SetValidator(new ModifierGroupItemValidation());
 	}
 }
@@ -45,13 +45,13 @@ public class ModifierGroupItemValidation : AbstractValidator<AddModifierGroupReq
 {
 	public ModifierGroupItemValidation()
 	{
-		RuleFor(p => p.GroupIds)
-			.Must(ids => ids == null || ids.Distinct().Count() == ids.Count)
-			.WithMessage("Duplicate group IDs are not allowed.");
+		//RuleFor(p => p.GroupIds)
+		//	.Must(ids => ids == null || ids.Distinct().Count() == ids.Count)
+		//	.WithMessage("Duplicate group IDs are not allowed.");
 
-		RuleForEach(p => p.GroupIds ?? new List<int>())
-			.NotEqual(0)
-			.WithMessage("Group ID must be a valid non-empty GUID.");
+		//RuleForEach(p => p.GroupIds ?? new List<int>())
+		//	.NotEqual(0)
+		//	.WithMessage("Group ID must be a valid non-empty GUID.");
 	}
 }
 

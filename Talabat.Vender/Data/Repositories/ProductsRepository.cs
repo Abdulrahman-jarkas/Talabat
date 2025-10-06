@@ -13,19 +13,19 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		return Task.CompletedTask;
 	}
 
-	public Task AddModifierGroup(ModifierGroup modifierGroup)
-	{
-		context.ModifierGroups.Add(modifierGroup);
-		return Task.CompletedTask;
-	}
+	//public Task AddModifierGroup(ModifierGroup modifierGroup)
+	//{
+	//	context.ModifierGroups.Add(modifierGroup);
+	//	return Task.CompletedTask;
+	//}
 
-	public Task<List<ModifierGroup>> GetModifierGroups(IEnumerable<int> ids)
-	{
-		return context.ModifierGroups
-			.Where(g => ids.Contains(g.Id))
-			.AsNoTracking()
-			.ToListAsync();
-	}
+	//public Task<List<ModifierGroup>> GetModifierGroups(IEnumerable<int> ids)
+	//{
+	//	return context.ModifierGroups
+	//		.Where(g => ids.Contains(g.Id))
+	//		.AsNoTracking()
+	//		.ToListAsync();
+	//}
 
 	public Task<List<Modifier>> GetModifiers(IEnumerable<int> ids)
 	{
@@ -45,7 +45,7 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 	{
 		return context.Products
 			.Where(p => p.Id == id)
-			.Include(p => p.ModifierGroups)
+			//.Include(p => p.ModifierGroups)
 			.AsSingleQuery()
 			.AsNoTracking()
 			.FirstOrDefaultAsync();
