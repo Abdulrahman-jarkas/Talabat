@@ -7,7 +7,7 @@ public class GetProductEndpoint(IProductService productService) : Endpoint<GetPr
 {
 	public override void Configure()
 	{
-		Get("/api/products");
+		Get("/api/products/{Id:int}");
 		AllowAnonymous();
 	}
 

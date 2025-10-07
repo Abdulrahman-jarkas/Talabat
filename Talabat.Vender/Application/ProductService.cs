@@ -1,5 +1,6 @@
 ﻿using Talabat.Vender.Domain.ProductAggregate;
 using Talabat.Vender.Domain.ProductAggregate.Entities;
+using Talabat.Vender.Infrastructure.Persistence.Repositories;
 using Talabat.Vender.Interfaces;
 
 namespace Talabat.Vender.Application;
@@ -45,5 +46,36 @@ public class ProductService(IProductsRepository productsRepository) : IProductSe
 		};
 
 		return product.ToDetailsDto(modifiers.ToDictionary(x => x.Id));
+	}
+
+	public async Task<PaginatedResult<ModifierDto>> GetPaginatedModifiersAsync(int pageSize, int? lastId)
+	{
+		var countTask = productsRepository.GetModifiersEstimatedRowCountAsync();
+		var itemsTask = productsRepository.GetPaginatedModifiersAsync(pageSize, lastId);
+
+		await Task.WhenAll(countTask, itemsTask);
+
+		var items = itemsTask.Result.Select(p => p.ToDto()).ToList();
+		var totalCount = countTask.Result;
+
+		return new PaginatedResult<ModifierDto>
+		{
+			Items = items,
+			TotalCount = totalCount,
+			LastId = lastId
+		};
+	}
+
+	public async Task<PaginatedResult<ProductDto>> GetPaginatedProductsAsync(int pageSize, int? lastId)
+	{
+		var count = await productsRepository.GetProductsEstimatedRowCountAsync();
+		var items= await productsRepository.GetPaginatedProductsAsync(pageSize, lastId);
+
+		return new PaginatedResult<ProductDto>
+		{
+			Items = items.Select(p => p.ToDto()).ToList(),
+			TotalCount = count,
+			LastId = lastId
+		};
 	}
 }

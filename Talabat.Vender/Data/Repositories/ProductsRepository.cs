@@ -5,6 +5,18 @@ using Talabat.Vender.Interfaces;
 
 namespace Talabat.Vender.Infrastructure.Persistence.Repositories;
 
+public class TableEstimate
+{
+	public int EstimatedRows { get; set; }
+}
+
+public class PaginatedResult<T>
+{
+	public List<T> Items { get; set; } = new();
+	public int? LastId { get; set; }
+	public long TotalCount { get; set; } // approximate
+}
+
 public class ProductsRepository(ProductsManagementDbContext context) : IProductsRepository
 {
 	public Task Add(Product product)
@@ -12,20 +24,6 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		context.Products.Add(product);
 		return Task.CompletedTask;
 	}
-
-	//public Task AddModifierGroup(ModifierGroup modifierGroup)
-	//{
-	//	context.ModifierGroups.Add(modifierGroup);
-	//	return Task.CompletedTask;
-	//}
-
-	//public Task<List<ModifierGroup>> GetModifierGroups(IEnumerable<int> ids)
-	//{
-	//	return context.ModifierGroups
-	//		.Where(g => ids.Contains(g.Id))
-	//		.AsNoTracking()
-	//		.ToListAsync();
-	//}
 
 	public Task<List<Modifier>> GetModifiers(IEnumerable<int> ids)
 	{
@@ -45,10 +43,18 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 	{
 		return context.Products
 			.Where(p => p.Id == id)
-			//.Include(p => p.ModifierGroups)
-			.AsSingleQuery()
 			.AsNoTracking()
 			.FirstOrDefaultAsync();
+	}
+
+	public Task<int> GetProductsEstimatedRowCountAsync()
+	{
+		return context.Products.CountAsync();
+	}
+
+	public Task<int> GetModifiersEstimatedRowCountAsync()
+	{
+		return context.Modifiers.CountAsync();
 	}
 
 	public Task SaveChanges()
@@ -56,5 +62,23 @@ public class ProductsRepository(ProductsManagementDbContext context) : IProducts
 		return context.SaveChangesAsync();
 	}
 
+	public Task<List<Product>> GetPaginatedProductsAsync(int pageSize, int? lastId)
+	{
+		return context.Products
+			.Where(p => !lastId.HasValue || p.Id > lastId)
+			.OrderBy(p => p.Id)
+			.Take(pageSize)
+			.AsNoTracking()
+			.ToListAsync();
+	}
 
+	public Task<List<Modifier>> GetPaginatedModifiersAsync(int pageSize, int? lastId)
+	{
+		return context.Modifiers
+			.Where(p => !lastId.HasValue || p.Id > lastId)
+			.OrderBy(p => p.Id)
+			.Take(pageSize)
+			.AsNoTracking()
+			.ToListAsync();
+	}
 }
