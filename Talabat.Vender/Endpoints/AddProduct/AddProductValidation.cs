@@ -22,13 +22,7 @@ public class AddProductValidation : AbstractValidator<AddProductRequest>
 			.PrecisionScale(18, 2, false)
 			.WithMessage("Price must have no more than 2 decimal places.");
 
-		//RuleFor(p => p.GroupIds)
-		//	.Must(ids => ids == null || ids.Distinct().Count() == ids.Count)
-		//	.WithMessage("Duplicate group IDs are not allowed.");
-
-		//RuleForEach(p => p.GroupIds)
-		//	.NotEmpty()
-		//	.WithMessage("Group ID must be a valid Id");
-
+		RuleForEach(p => p.Groups)
+			.SetValidator(new AddModifierGroupValidation());
 	}
 }

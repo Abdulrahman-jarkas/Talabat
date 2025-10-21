@@ -10,7 +10,7 @@ public class ProductsManagementDbContext : DbContext
 	public DbSet<Product> Products { get; set; }
 	public DbSet<Modifier> Modifiers { get; set; }
 
-	public ProductsManagementDbContext(DbContextOptions options) : base(options)
+	public ProductsManagementDbContext(DbContextOptions<ProductsManagementDbContext> options) : base(options)
 	{
 	}
 

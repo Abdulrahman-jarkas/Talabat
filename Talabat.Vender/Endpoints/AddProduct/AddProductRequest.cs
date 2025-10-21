@@ -1,6 +1,4 @@
-﻿using Talabat.Vender.Endpoints.AddModifierGroup;
-
-namespace Talabat.Vender.Endpoints.AddProduct;
+﻿namespace Talabat.Vender.Endpoints.AddProduct;
 
 public class AddProductRequest
 {

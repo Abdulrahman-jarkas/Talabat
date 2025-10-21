@@ -1,5 +1,4 @@
 ﻿using Talabat.Vender.Application;
-using Talabat.Vender.Endpoints.AddModifierGroup;
 using Talabat.Vender.Endpoints.AddProduct;
 
 namespace Talabat.Vender;

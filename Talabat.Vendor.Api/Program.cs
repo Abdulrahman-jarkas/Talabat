@@ -5,7 +5,8 @@ using Talabat.Vender;
 var builder = WebApplication.CreateBuilder(args);
 {
 	builder.Services
-		.AddInfrastructure(builder.Configuration)
+		.AddVendorInfrastructure(builder.Configuration)
+		.AddOrderProcessingInfrastructure(builder.Configuration)
 		.AddFastEndpoints(o => o.IncludeAbstractValidators = true)
 		.SwaggerDocument();
 }

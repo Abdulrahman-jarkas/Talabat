@@ -10,6 +10,7 @@ public class ProductDto
 
 public class ModifierSubGroupDto
 {
+	public Guid Id { get; set; }
 	public string Title { get; set; } = string.Empty;
 	public int Min { get; set; }
 	public int Max { get; set; }
@@ -18,6 +19,7 @@ public class ModifierSubGroupDto
 
 public class ModifierGroupDto
 {
+	public Guid Id { get; set; }
 	public string Title { get; set; } = string.Empty;
 	public int Min { get; set; }
 	public int Max { get; set; }

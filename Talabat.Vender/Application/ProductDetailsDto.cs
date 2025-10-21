@@ -10,7 +10,7 @@ public class ProductDetailsDto
 
 	public class GroupDetailsDto
 	{
-		public int Id { get; set; }
+		public Guid Id { get; set; }
 		public string Title { get; set; } = string.Empty;
 		public int Min { get; set; }
 		public int Max { get; set; }
@@ -19,7 +19,7 @@ public class ProductDetailsDto
 
 	public class SubGroupDetailsDto
 	{
-		public int Id { get; set; }
+		public Guid Id { get; set; }
 		public string Title { get; set; } = string.Empty;
 		public int Min { get; set; }
 		public int Max { get; set; }

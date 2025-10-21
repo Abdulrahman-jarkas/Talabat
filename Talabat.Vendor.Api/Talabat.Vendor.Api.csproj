@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Talabat.OrderProcessing\Talabat.OrderProcessing.csproj" />
     <ProjectReference Include="..\Talabat.Vender\Talabat.Vender.csproj" />
   </ItemGroup>
 

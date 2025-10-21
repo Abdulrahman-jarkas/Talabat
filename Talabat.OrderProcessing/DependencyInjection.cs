@@ -1,16 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Talabat.Vender.Application;
-using Talabat.Vender.Infrastructure.Persistence;
-using Talabat.Vender.Infrastructure.Persistence.Repositories;
-using Talabat.Vender.Interfaces;
+using Talabat.OrderProcessing.Application.Services;
+using Talabat.OrderProcessing.Data;
+using Talabat.OrderProcessing.Data.Repositories;
 
 namespace Talabat.Vender;
 
 public static class DependencyInjection
 {
-	public static IServiceCollection AddVendorInfrastructure(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection AddOrderProcessingInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPersistence(configuration)
 			.AddMediatR();
@@ -20,13 +19,13 @@ public static class DependencyInjection
 
 	public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddDbContext<ProductsManagementDbContext>(cfg =>
+		services.AddDbContext<OrderProcessingDbContext>(cfg =>
 		{
 			cfg.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
 		});
 
-		services.AddScoped<IProductsRepository, ProductsRepository>();
-		services.AddScoped<IProductService, ProductService>();
+		services.AddScoped<IOrderRepository, OrderRepository>();
+		services.AddScoped<IOrderService, OrderService>();
 
 		return services;
 	}
@@ -37,5 +36,4 @@ public static class DependencyInjection
 
 		return services;
 	}
-
 }

@@ -24,6 +24,7 @@ public static class ProductDomainToDetailsDtoMapper
 	{
 		return new ProductDetailsDto.GroupDetailsDto
 		{
+			Id = group.Id,
 			Title = group.Title,
 			Min = group.Min,
 			Max = group.Max,
@@ -58,6 +59,7 @@ public static class ProductDomainToDetailsDtoMapper
 	{
 		return new ProductDetailsDto.SubGroupDetailsDto
 		{
+			Id = subGroup.Id,
 			Title = subGroup.Title,
 			Min = subGroup.Min,
 			Max = subGroup.Max,
@@ -78,7 +80,7 @@ public static class ProductDomainToDetailsDtoMapper
 		return new ProductDetailsDto.ModifierDetailsForSubGroupDto
 		{
 			Id = modifierId,
-			Title = modifier?.Title ?? $"Modifier #{modifierId}",
+			Title = modifier?.Title ?? $"",
 			Price = modifier?.Price ?? 0
 		};
 	}

@@ -4,6 +4,7 @@ namespace Talabat.Vender.Domain.ProductAggregate.Entities;
 
 public class ModifierGroup : ValueObject
 {
+	public Guid Id { get; set; } = Guid.NewGuid();
 	public string Title { get; init; } = string.Empty;
 	public int Min { get; init; }
 	public int Max { get; init; }
@@ -24,10 +25,7 @@ public class ModifierGroup : ValueObject
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return Items;
-		yield return Title;
-		yield return Min;
-		yield return Max;
+		yield return Id;
 	}
 }
 
@@ -45,6 +43,7 @@ public class ModifierGroupItem : ValueObject
 
 public class ModifierSubGroup : ValueObject
 {
+	public Guid Id { get; set; } = Guid.NewGuid();
 	public string Title { get; set; } = string.Empty;
 	public int Min { get; set; }
 	public int Max { get; set; }
@@ -57,9 +56,6 @@ public class ModifierSubGroup : ValueObject
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return ModifierIds;
-		yield return Title;
-		yield return Min;
-		yield return Max;
+		yield return Id;
 	}
 }

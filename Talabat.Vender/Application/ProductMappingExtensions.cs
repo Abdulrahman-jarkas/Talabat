@@ -24,6 +24,7 @@ public static class ProductMappingExtensions
 	{
 		return new ModifierGroupDto
 		{
+			Id = group.Id,
 			Title = group.Title,
 			Min = group.Min,
 			Max = group.Max,
@@ -48,6 +49,7 @@ public static class ProductMappingExtensions
 	{
 		return new ModifierSubGroupDto
 		{
+			Id = subGroup.Id,
 			Title = subGroup.Title,
 			Min = subGroup.Min,
 			Max = subGroup.Max,
