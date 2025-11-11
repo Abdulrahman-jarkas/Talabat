@@ -64,7 +64,7 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 
 			if (groupInfo is null)
 			{
-				errors.Add(Error.Validation($"Modifier group or subgroup with ID {reqGroup.Id} does not exist for product '{product.Title}'."));
+				errors.Add(Error.Validation($"Modifier group with ID {reqGroup.Id} does not exist for product '{product.Title}'."));
 				continue;
 			}
 
@@ -163,6 +163,114 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		};
 
 		return orderItem;
+	}
+
+	public async Task<ErrorOr<Success>> Accept(int orderId, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Accept();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
+	}
+
+	public async Task<ErrorOr<Success>> Reject(int orderId, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Reject();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+		return Result.Success;
+	}
+
+	public async Task<ErrorOr<Success>> Ship(int orderId, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Ship();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
+	}
+
+	// cancel order 
+	public async Task<ErrorOr<Success>> Cancel(int orderId, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Cancel();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
+	}
+
+	public async Task<ErrorOr<Success>> Deliver(int orderId, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Deliver();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
+	}
+
+	public async Task<ErrorOr<Success>> CashPay(int orderId, decimal amount, CancellationToken cancellationToken = default)
+	{
+		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+		if (order is null)
+			return Error.NotFound($"Order with ID {orderId} not found.");
+
+		var result = order.Pay();
+
+		if (result.IsError)
+			return result;
+
+		await orderRepository.UpdateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
 	}
 
 	public Task<ProductResponse?> GetProductDetailsAsync(int productId, CancellationToken cancellationToken = default)

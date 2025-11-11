@@ -108,6 +108,7 @@ public class Order : AggregateRoot
 			)
 		{
 			PaymentStatus = PaymentStatusValues.Paid;
+			return Result.Success;
 		}
 
 

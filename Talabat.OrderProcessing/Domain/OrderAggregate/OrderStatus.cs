@@ -16,6 +16,11 @@ public class OrderStatus
 		return currentStatus switch
 		{
 			OrderStatusValues.Placed => new PlacedOrderStatus(),
+			OrderStatusValues.Accepted => new AcceptedOrderStatus(),
+			OrderStatusValues.Rejected => new RejectedOrderStatus(),
+			OrderStatusValues.Shipped => new ShippedOrderStatus(),
+			OrderStatusValues.Delivered => new DeliveredOrderStatus(),
+			OrderStatusValues.Cancelled => new CancelledOrderStatus(),
 			_ => throw new NotImplementedException("Order status not implemented."),
 		};
 	}
