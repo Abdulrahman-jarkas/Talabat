@@ -16,7 +16,8 @@ public static class ProductMappingExtensions
 			Price = product.BasePrice,
 			Groups = product.Customization.ModifierGroups
 				.Select(g => g.ToDto())
-				.ToList()
+				.ToList(),
+			TaxCategoryId = product.TaxCategoryId,
 		};
 	}
 

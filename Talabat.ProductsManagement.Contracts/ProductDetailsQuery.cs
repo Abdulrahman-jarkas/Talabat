@@ -4,7 +4,7 @@ namespace Talabat.ProductsManagement.Contracts;
 
 public record ProductDetailsQuery(int ProductId) : IRequest<ProductResponse?>;
 
-public record ProductResponse(int Id, string Title, decimal Price, List<ModifierGroupResponse> ModifierGroups);
+public record ProductResponse(int Id, string Title, decimal Price, int TaxCategoryId, List<ModifierGroupResponse> ModifierGroups);
 
 public record ModifierResponse(int Id, string Title, decimal Price, List<ModifierSubGroupResponse> ModifierSubGroups);
 

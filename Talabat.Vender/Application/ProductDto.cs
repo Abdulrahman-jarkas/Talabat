@@ -5,6 +5,7 @@ public class ProductDto
 	public int Id { get; set; }
 	public string Title { get; set; } = string.Empty;
 	public decimal Price { get; set; }
+	public int TaxCategoryId { get; set; }
 	public List<ModifierGroupDto> Groups { get; set; } = new();
 }
 

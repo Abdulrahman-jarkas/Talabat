@@ -9,6 +9,7 @@ public class OrderItem : ValueObject
 	public List<Modifier> Modifiers { get; set; } = new();
 	public int Quantity { get; init; }
 	public string Note { get; init; } = string.Empty;
+	public decimal Vat { get; init; }
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{

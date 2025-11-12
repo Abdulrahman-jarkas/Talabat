@@ -27,6 +27,7 @@ public static class ProductResponseMapper
 			productDetailsDto.Id,
 			productDetailsDto.Title,
 			productDetailsDto.Price,
+			productDetailsDto.TaxCategoryId,
 			productDetailsDto.Groups.Select(g => g.ToResponse()).ToList());
 	}
 

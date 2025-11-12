@@ -5,6 +5,9 @@ using Talabat.OrderProcessing.Data.Repositories;
 using Talabat.OrderProcessing.Domain.OrderAggregate;
 using Talabat.OrderProcessing.Endpoints.CreateOrder;
 using Talabat.ProductsManagement.Contracts;
+using Talabat.Taxes;
+using Talabat.Taxes.Contracts;
+
 
 namespace Talabat.OrderProcessing.Application.Services;
 
@@ -23,7 +26,7 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 			if (product is null)
 				return Error.NotFound($"Product with ID {itemRequest.ProductId} not found.");
 
-			var itemResult = CreateOrderItem(itemRequest, product);
+			var itemResult = await CreateOrderItemAsync(itemRequest, product);
 			if (itemResult.IsError)
 				return itemResult.Errors;
 			else
@@ -38,7 +41,7 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		return order.ToDto();
 	}
 
-	private static ErrorOr<OrderItem> CreateOrderItem(CreateOrderItemRequest request, ProductResponse product)
+	private async Task<ErrorOr<OrderItem>> CreateOrderItemAsync(CreateOrderItemRequest request, ProductResponse product)
 	{
 		var errors = new List<Error>();
 		var modifiers = new List<Modifier>();
@@ -153,13 +156,28 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		if (errors.Count > 0)
 			return errors;
 
+		var taxPolicy = await sender.Send(new GetTaxPolicyQuery(CountryCodes.KSA));
+
+		if (taxPolicy is null)
+		{
+			return Error.NotFound("Tax policy not found for the specified country.");
+		}
+
+		var taxCategory = taxPolicy.Categories.FirstOrDefault(c => c.Id == product!.TaxCategoryId);
+
+		if(taxCategory is null)
+		{
+			return Error.NotFound("VAT category not found for the product.");
+		}
+
 		var orderItem = new OrderItem
 		{
 			ProductId = product!.Id,
 			ProductPrice = product.Price,
 			Quantity = request.Quantity,
 			Note = request.Note,
-			Modifiers = modifiers
+			Modifiers = modifiers,
+			Vat = taxCategory.vat
 		};
 
 		return orderItem;

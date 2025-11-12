@@ -14,7 +14,8 @@ public static class ProductDtoToDomainMapper
 		return new Product(
 			title: dto.Title,
 			basePrice: dto.Price,
-			customization: customization
+			customization: customization,
+			taxCategoryId: dto.TaxCategoryId
 		);
 	}
 

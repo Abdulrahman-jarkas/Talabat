@@ -1,11 +1,12 @@
 ﻿
+using ErrorOr;
 using Talabat.Vender.Infrastructure.Persistence.Repositories;
 
 namespace Talabat.Vender.Application
 {
 	public interface IProductService
 	{
-		Task Add(ProductDto productDto);
+		Task<ErrorOr<Success>> Add(ProductDto productDto);
 		Task AddModifier(ModifierDto modifierDto);
 		Task<ProductDetailsDto?> GetById(int id);
 		Task<PaginatedResult<ProductDto>> GetPaginatedProductsAsync(int pageSize, int? lastId);

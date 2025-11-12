@@ -14,7 +14,8 @@ public static class ProductDomainToDetailsDtoMapper
 			Price = product.BasePrice,
 			Groups = product.Customization.ModifierGroups
 				.Select(g => g.ToDetailsDto(modifiers))
-				.ToList()
+				.ToList(),
+			TaxCategoryId = product.TaxCategoryId,
 		};
 	}
 

@@ -53,7 +53,8 @@ public static class ProductMappings
 		{
 			Title = request.Title,
 			Price = request.Price,
-			Groups = request.Groups?.Select(g => g.ToDto()).ToList() ?? new()
+			Groups = request.Groups?.Select(g => g.ToDto()).ToList() ?? new(),
+			TaxCategoryId = request.TaxCategoryId
 		};
 	}
 

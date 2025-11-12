@@ -6,7 +6,7 @@ public class ProductDetailsDto
 	public string Title { get; set; } = string.Empty;
 	public decimal Price { get; set; }
 	public List<GroupDetailsDto> Groups { get; set; } = new();
-
+	public int TaxCategoryId { get; set; }
 
 	public class GroupDetailsDto
 	{
