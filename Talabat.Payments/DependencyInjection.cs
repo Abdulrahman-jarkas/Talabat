@@ -1,14 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Talabat.Taxes.Configuration;
-using Talabat.Taxes.Repositories;
 
-namespace Talabat.Taxes;
+namespace Talabat.Payments;
 
 public static class DependencyInjection
 {
-	public static IServiceCollection AddTaxesInfrastructure(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection AddOrderProcessingInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPersistence(configuration)
 			.AddMediatR();
@@ -18,12 +16,13 @@ public static class DependencyInjection
 
 	public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddDbContext<TaxesDbContext>(cfg =>
+		services.AddDbContext<PaymentsDbContext>(cfg =>
 		{
 			cfg.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
 		});
 
-		services.AddScoped<ITaxesRepository, TaxesRepository>();
+		services.AddScoped<IPaymentService, PaymentService>();
+		services.AddScoped<IPaymentsRepository, PaymentsRepository>();
 
 		return services;
 	}

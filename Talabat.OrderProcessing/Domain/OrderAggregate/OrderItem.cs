@@ -17,16 +17,18 @@ public class OrderItem : ValueObject
 		yield return ProductPrice;
 		yield return Quantity;
 		yield return Note;
+		yield return Vat;
 		foreach (var modifier in Modifiers)
 		{
 			yield return modifier.Id;
 		}
 	}
 
+	// here the modifiers without vat for now
 	public decimal GetTotalPrice()
 	{
 		decimal modifiersPrice = Modifiers.Sum(g => g.Price);
-
-		return (ProductPrice + modifiersPrice) * Quantity;
+		decimal vatValue = ProductPrice * (Vat / 100);
+		return ((ProductPrice + vatValue) + modifiersPrice) * Quantity;
 	}
 }

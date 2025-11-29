@@ -6,11 +6,15 @@ public class OrderDetailsDto
 
 	public string OrderStatus { get; set; } = string.Empty;
 
+	public decimal ServiceFees { get; set; }
+
 	public OrderPaymentDto Payment { get; set; } = default!;
 
 	public List<OrderItemDto> Items { get; set; } = new();
 
 	public decimal Subtotal { get; set; }
+
+	public decimal Total { get; set; }
 }
 
 

@@ -1,6 +1,6 @@
 ﻿using ErrorOr;
 
-namespace Talabat.Taxes;
+namespace Talabat.Taxes.Common;
 
 public static class CountryCodes
 {

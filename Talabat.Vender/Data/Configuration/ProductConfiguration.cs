@@ -15,7 +15,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 		builder.Property(p => p.BasePrice)
 			.HasPrecision(18, 2);
 
-		builder.Property(p => p.TaxCategoryId);
+		builder.Property(p => p.TaxId);
+
+		builder.Property(p => p.VendorId);
 
 		builder.OwnsOne(d => d.Customization, c =>
 		{

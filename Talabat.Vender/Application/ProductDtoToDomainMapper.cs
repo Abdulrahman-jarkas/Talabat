@@ -1,5 +1,6 @@
 ﻿using Talabat.Vender.Domain.ProductAggregate.Entities;
 using Talabat.Vender.Domain.ProductAggregate;
+using Talabat.Vender.Infrastructure.Persistence.Configuration;
 
 namespace Talabat.Vender.Application;
 
@@ -12,6 +13,7 @@ public static class ProductDtoToDomainMapper
 		var customization = Customization.Create(modifierGroups);
 
 		return new Product(
+			vendorId: 1,
 			title: dto.Title,
 			basePrice: dto.Price,
 			customization: customization,

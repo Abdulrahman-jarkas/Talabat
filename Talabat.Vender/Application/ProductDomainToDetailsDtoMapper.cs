@@ -15,7 +15,7 @@ public static class ProductDomainToDetailsDtoMapper
 			Groups = product.Customization.ModifierGroups
 				.Select(g => g.ToDetailsDto(modifiers))
 				.ToList(),
-			TaxCategoryId = product.TaxCategoryId,
+			TaxCategoryId = product.TaxId,
 		};
 	}
 

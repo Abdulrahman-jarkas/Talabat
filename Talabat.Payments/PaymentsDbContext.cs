@@ -1,14 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace Talabat.Taxes;
+namespace Talabat.Payments;
 
-public class TaxesDbContext : DbContext
+public class PaymentsDbContext : DbContext
 {
-	public DbSet<TaxPolicy> TaxPolicies { get; set; }
-	public DbSet<TaxCategory> TaxCategories { get; set; }
+	public DbSet<Payment> Payments { get; set; }
 
-	public TaxesDbContext(DbContextOptions<TaxesDbContext> options) : base(options)
+	public PaymentsDbContext(DbContextOptions<PaymentsDbContext> options) : base(options)
 	{
 	}
 

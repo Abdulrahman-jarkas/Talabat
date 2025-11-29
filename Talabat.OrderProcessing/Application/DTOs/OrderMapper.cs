@@ -24,7 +24,9 @@ public static class OrderMapper
 				TotalPrice = i.GetTotalPrice(),
 				Modifiers = i.Modifiers.Select(g => g.ToDto()).ToList()
 			}).ToList(),
-			Subtotal = order.Subtotal
+			ServiceFees = order.ServiceFees,
+			Subtotal = order.Subtotal,
+			Total = order.Total,
 		};
 	}
 

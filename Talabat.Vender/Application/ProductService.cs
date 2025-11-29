@@ -1,6 +1,6 @@
 ﻿using ErrorOr;
 using MediatR;
-using Talabat.Taxes;
+using Talabat.Taxes.Common;
 using Talabat.Taxes.Contracts;
 using Talabat.Vender.Domain.ProductAggregate.Entities;
 using Talabat.Vender.Infrastructure.Persistence.Repositories;
@@ -14,21 +14,13 @@ public class ProductService(IProductsRepository productsRepository, ISender send
 	{
 		var product = productDto.ToDomain();
 
-		var taxPolicy = await sender.Send(new GetTaxPolicyQuery(CountryCodes.KSA));
+		var taxPolicy = await sender.Send(new GetTaxQuery(product.TaxId));
 
 		if(taxPolicy == null)
 		{
 			return Error.NotFound(
 				code: "TaxPolicy.NotFound",
-				description: $"Tax policy for country code '{CountryCodes.KSA}' was not found."
-			);
-		}
-
-		if(!taxPolicy.Categories.Any(c => c.Id == productDto.TaxCategoryId))
-		{
-			return Error.Validation(
-				code: "TaxCategory.Invalid",
-				description: $"Tax category ID '{productDto.TaxCategoryId}' is not valid for country code '{CountryCodes.KSA}'."
+				description: $"Tax With Id '{product.TaxId}' was not found."
 			);
 		}
 

@@ -5,7 +5,6 @@ using Talabat.OrderProcessing.Data.Repositories;
 using Talabat.OrderProcessing.Domain.OrderAggregate;
 using Talabat.OrderProcessing.Endpoints.CreateOrder;
 using Talabat.ProductsManagement.Contracts;
-using Talabat.Taxes;
 using Talabat.Taxes.Contracts;
 
 
@@ -17,7 +16,15 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		CreateOrderRequest request,
 		CancellationToken cancellationToken = default)
 	{
+		// get country id from the token of the user
 		var orderItems = new List<OrderItem>();
+
+		var serviceFeesData = await sender.Send(new GetServiceFeesQuery(1));
+
+		if (serviceFeesData == null) 
+			return Error.NotFound($"Service Fees with couuntry id {1} not found");
+
+		var serviceFees = serviceFeesData.Value + (serviceFeesData.VatPercentage / 100);
 
 		foreach (var itemRequest in request.Items)
 		{
@@ -33,7 +40,7 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 				orderItems.Add(itemResult.Value);
 		}
 
-		var order = new Order(orderItems, PaymentMethodValues.Cash);
+		var order = new Order(orderItems, PaymentMethodValues.Cash, serviceFees);
 
 		await orderRepository.CreateAsync(order, cancellationToken);
 		await orderRepository.SaveChangesAsync(cancellationToken);
@@ -45,6 +52,9 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 	{
 		var errors = new List<Error>();
 		var modifiers = new List<Modifier>();
+
+		if(product is null)
+			return Error.NotFound("Product not found.");
 
 		// get required group from product response (required group are the groups that i's have min : 1)
 		var requiredGroupsIds = product?.ModifierGroups
@@ -156,18 +166,12 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		if (errors.Count > 0)
 			return errors;
 
-		var taxPolicy = await sender.Send(new GetTaxPolicyQuery(CountryCodes.KSA));
+		// get the country code from the token of the user or get it vendor of the product 
+		var tax = await sender.Send(new GetTaxQuery(product.TaxId));
 
-		if (taxPolicy is null)
+		if (tax is null)
 		{
 			return Error.NotFound("Tax policy not found for the specified country.");
-		}
-
-		var taxCategory = taxPolicy.Categories.FirstOrDefault(c => c.Id == product!.TaxCategoryId);
-
-		if(taxCategory is null)
-		{
-			return Error.NotFound("VAT category not found for the product.");
 		}
 
 		var orderItem = new OrderItem
@@ -177,7 +181,7 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 			Quantity = request.Quantity,
 			Note = request.Note,
 			Modifiers = modifiers,
-			Vat = taxCategory.vat
+			Vat = tax.VatPercentage
 		};
 
 		return orderItem;
@@ -236,7 +240,6 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 		return Result.Success;
 	}
 
-	// cancel order 
 	public async Task<ErrorOr<Success>> Cancel(int orderId, CancellationToken cancellationToken = default)
 	{
 		var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);

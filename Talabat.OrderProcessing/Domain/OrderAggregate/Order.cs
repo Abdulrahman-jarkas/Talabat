@@ -8,14 +8,18 @@ public class Order : AggregateRoot
 	public OrderStatus Status { get; private set; }
 	public PaymentMethodValues PaymentMethod { get; init; }
 	public PaymentStatusValues PaymentStatus { get; private set; }
+	public decimal ServiceFees { get; private set; }
 
 	public List<OrderItem> Items { get; private set; } = new();
 
 	public decimal Subtotal => Items.Sum(i => i.GetTotalPrice());
+	public decimal Total => Subtotal + ServiceFees;
 
 	public Order(
 		List<OrderItem> items,
-		PaymentMethodValues paymentMethod)
+		PaymentMethodValues paymentMethod,
+		decimal serviceFees 
+		)
 	{
 
 		if (items.Count <= 0)
@@ -27,6 +31,9 @@ public class Order : AggregateRoot
 		PaymentMethod = paymentMethod;
 		PaymentStatus = paymentMethod == PaymentMethodValues.Cash ?
 			PaymentStatusValues.Unpaid : PaymentStatusValues.Pending;
+	
+	
+		ServiceFees = serviceFees;
 	}
 
 	public ErrorOr<Success> Accept()
