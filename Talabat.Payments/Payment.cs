@@ -5,11 +5,13 @@ public class Payment
 	public Guid Id { get; init; }
 	public string Url { get; init; } = string.Empty;
 	public PaymentStatus Status { get; private set; }
+	public int CheckoutSessionId { get; init; }
 
-	public Payment(Guid id, string url)
+	public Payment(Guid id, string url, int checkoutSessionId)
 	{
 		Id = id;
 		Url = url;
+		CheckoutSessionId = checkoutSessionId;
 		Status = PaymentStatus.Pending;
 	}
 

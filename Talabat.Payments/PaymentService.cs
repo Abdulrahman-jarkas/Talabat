@@ -1,15 +1,20 @@
 ﻿
 using ErrorOr;
+using MediatR;
+using Talabat.Payments.Contracts;
 
 namespace Talabat.Payments;
 
-public class PaymentService(IPaymentsRepository paymentsRepository) : IPaymentService
+public class PaymentService(IPaymentsRepository paymentsRepository, ISender sender, IPublisher publisher) : IPaymentService
 {
-	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(int orderId, double amount)
+	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(int checkoutSessionId, decimal amount)
 	{
-		await paymentsRepository.AddPaymentAsync(new Payment(Guid.NewGuid(), ""));
+		var payment = new Payment(Guid.NewGuid(), "", checkoutSessionId);
 
-		return new CreatePaymentSessionResponse() { PaymentId = Guid.NewGuid(), PaymentUrl = "" };
+		await paymentsRepository.AddPaymentAsync(payment);
+		await paymentsRepository.SaveChangesAsync();
+
+		return new CreatePaymentSessionResponse() { PaymentId = payment.Id, PaymentUrl = payment.Url };
 	}
 
 	public async Task<ErrorOr<Success>> OnPaymentFailed(Guid paymentId)
@@ -92,11 +97,12 @@ public class PaymentService(IPaymentsRepository paymentsRepository) : IPaymentSe
 		if (payment.Status != PaymentStatus.Pending)
 			return Error.Validation(
 					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}."
-				);
+					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}.");
 
 		payment.SetStatus(PaymentStatus.Paid);
 		await paymentsRepository.SaveChangesAsync();
+
+		await publisher.Publish(new PaymentSuccessedEvent(payment.Id));
 
 		return Result.Success;
 	}

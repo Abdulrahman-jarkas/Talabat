@@ -2,16 +2,20 @@
 using MediatR;
 using Talabat.OrderProcessing.Application.DTOs;
 using Talabat.OrderProcessing.Data.Repositories;
+using Talabat.OrderProcessing.Domain.CheckoutSessionAggregate;
 using Talabat.OrderProcessing.Domain.OrderAggregate;
 using Talabat.OrderProcessing.Endpoints.CreateOrder;
+using Talabat.Payments.Contracts;
 using Talabat.ProductsManagement.Contracts;
 using Talabat.Taxes.Contracts;
 
 
 namespace Talabat.OrderProcessing.Application.Services;
 
-public class OrderService(ISender sender, IOrderRepository orderRepository) : IOrderService
+public class OrderService(ISender sender, IOrderRepository orderRepository, ICheckoutSessionsRepository checkoutSessionsRepository) : IOrderService
 {
+	//@TODO: we need a cart and cart items instead of repeate the order items
+
 	public async Task<ErrorOr<OrderDetailsDto>> CreateOrderAsync(
 		CreateOrderRequest request,
 		CancellationToken cancellationToken = default)
@@ -297,5 +301,60 @@ public class OrderService(ISender sender, IOrderRepository orderRepository) : IO
 	public Task<ProductResponse?> GetProductDetailsAsync(int productId, CancellationToken cancellationToken = default)
 	{
 		return sender.Send(new ProductDetailsQuery(productId), cancellationToken);
+	}
+
+	//@TODO: we need a cart and cart items instead of repeate the order items
+	public async Task<ErrorOr<string>> StartCheckoutSession(CreateOrderRequest request, CancellationToken cancellationToken = default)
+	{
+		var orderItems = new List<OrderItem>();
+
+		var serviceFeesData = await sender.Send(new GetServiceFeesQuery(1));
+
+		if (serviceFeesData == null)
+			return Error.NotFound($"Service Fees with couuntry id {1} not found");
+
+		var serviceFees = serviceFeesData.Value + (serviceFeesData.VatPercentage / 100);
+
+		foreach (var itemRequest in request.Items)
+		{
+			var product = await sender.Send(new ProductDetailsQuery(itemRequest.ProductId), cancellationToken);
+
+			if (product is null)
+				return Error.NotFound($"Product with ID {itemRequest.ProductId} not found.");
+
+			var itemResult = await CreateOrderItemAsync(itemRequest, product);
+			if (itemResult.IsError)
+				return itemResult.Errors;
+			else
+				orderItems.Add(itemResult.Value);
+		}
+
+
+		var checkoutSession = new CheckoutSession(orderItems, serviceFees);
+
+		await checkoutSessionsRepository.CreateAsync(checkoutSession, cancellationToken);
+		await checkoutSessionsRepository.SaveChangesAsync(cancellationToken);
+
+		var paymentSession = await sender.Send(new CreatePaymentSessionRequest(checkoutSession.Id, checkoutSession.Total), cancellationToken);
+
+		if(paymentSession.IsError)
+			return paymentSession.Errors;
+
+		checkoutSession.SetPaymentSession(paymentSession.Value.PaymentId);
+
+		await checkoutSessionsRepository.UpdateAsync(checkoutSession);
+		await checkoutSessionsRepository.SaveChangesAsync();
+
+		return paymentSession.Value.PaymentUrl;
+	}
+
+	public async Task<ErrorOr<Success>> CreateOrderFromCheckoutSessionAsync(CheckoutSession checkoutSession, CancellationToken cancellationToken = default)
+	{
+		var order = new Order(checkoutSession.Items, PaymentMethodValues.Card, checkoutSession.ServiceFees, checkoutSession.PaymentId);
+
+		await orderRepository.CreateAsync(order, cancellationToken);
+		await orderRepository.SaveChangesAsync(cancellationToken);
+
+		return Result.Success;
 	}
 }

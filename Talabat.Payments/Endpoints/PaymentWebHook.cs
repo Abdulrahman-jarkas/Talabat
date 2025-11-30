@@ -14,10 +14,8 @@ public enum PaymentEventType
 public class PaymentWebHookRequest
 {
 	public PaymentEventType EventType { get; set; }
-	public string OrderId { get; set; }
-	public string PaymentId { get; set; }
+	public Guid PaymentId { get; set; }
 	public decimal Amount { get; set; }
-	public bool isSuccess { get; set; }
 }
 
 public class PaymentWebHook(IPaymentService paymentService) : Endpoint<PaymentWebHookRequest>
@@ -32,15 +30,13 @@ public class PaymentWebHook(IPaymentService paymentService) : Endpoint<PaymentWe
 	{
 		// here we need to handle idempotency to avoid processing the same event multiple times
 
-		var paymentId = Guid.Parse(req.PaymentId);
-
 		// Execute the appropriate handler
 		var task = req.EventType switch
 		{
-			PaymentEventType.PaymentSucceeded => paymentService.OnPaymentSuccess(paymentId),
-			PaymentEventType.PaymentFailed => paymentService.OnPaymentFailed(paymentId),
-			PaymentEventType.PaymentRefunded => paymentService.OnPaymentRefundSuccess(paymentId),
-			PaymentEventType.PaymentRefundFailed => paymentService.OnPaymentRefundFailed(paymentId),
+			PaymentEventType.PaymentSucceeded => paymentService.OnPaymentSuccess(req.PaymentId),
+			PaymentEventType.PaymentFailed => paymentService.OnPaymentFailed(req.PaymentId),
+			PaymentEventType.PaymentRefunded => paymentService.OnPaymentRefundSuccess(req.PaymentId),
+			PaymentEventType.PaymentRefundFailed => paymentService.OnPaymentRefundFailed(req.PaymentId),
 			_ => Task.FromResult<ErrorOr<Success>>(Error.Validation(
 					code: "Payment.InvalidEventType",
 					description: $"Invalid payment event type {req.EventType.ToString()}."

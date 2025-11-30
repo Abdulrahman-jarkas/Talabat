@@ -6,7 +6,7 @@ namespace Talabat.Payments;
 
 public static class DependencyInjection
 {
-	public static IServiceCollection AddOrderProcessingInfrastructure(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection AddPaymentsInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPersistence(configuration)
 			.AddMediatR();

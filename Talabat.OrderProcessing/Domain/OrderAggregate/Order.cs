@@ -9,16 +9,20 @@ public class Order : AggregateRoot
 	public PaymentMethodValues PaymentMethod { get; init; }
 	public PaymentStatusValues PaymentStatus { get; private set; }
 	public decimal ServiceFees { get; private set; }
+	public Guid? PaymentId { get; private set; } = null;
 
 	public List<OrderItem> Items { get; private set; } = new();
 
 	public decimal Subtotal => Items.Sum(i => i.GetTotalPrice());
 	public decimal Total => Subtotal + ServiceFees;
 
+
+
 	public Order(
 		List<OrderItem> items,
 		PaymentMethodValues paymentMethod,
-		decimal serviceFees 
+		decimal serviceFees, 
+		Guid? paymentId = null
 		)
 	{
 
@@ -31,9 +35,9 @@ public class Order : AggregateRoot
 		PaymentMethod = paymentMethod;
 		PaymentStatus = paymentMethod == PaymentMethodValues.Cash ?
 			PaymentStatusValues.Unpaid : PaymentStatusValues.Pending;
-	
-	
+
 		ServiceFees = serviceFees;
+		PaymentId = paymentId;
 	}
 
 	public ErrorOr<Success> Accept()
@@ -74,7 +78,7 @@ public class Order : AggregateRoot
 
 	public ErrorOr<Success> Deliver()
 	{
-		if(PaymentStatus == PaymentStatusValues.Unpaid)
+		if (PaymentStatus == PaymentStatusValues.Unpaid)
 		{
 			return Error.Conflict("Cannot deliver an unpaid order.");
 		}
