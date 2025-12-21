@@ -1,6 +1,6 @@
 ﻿using ErrorOr;
 
-namespace Talabat.Users;
+namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 
 internal record CartErrors
 {

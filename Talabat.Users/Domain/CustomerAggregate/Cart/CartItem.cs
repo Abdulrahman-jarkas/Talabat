@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using Talabat.SharedKernal;
 
-namespace Talabat.Users;
+namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 
 internal class CartItem : ValueObject
 {

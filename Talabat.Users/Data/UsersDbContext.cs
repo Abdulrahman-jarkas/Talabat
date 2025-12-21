@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.MerchantAggregate;
 
-namespace Talabat.Users;
+namespace Talabat.Users.Data;
 
 public class UsersDbContext : DbContext
 {

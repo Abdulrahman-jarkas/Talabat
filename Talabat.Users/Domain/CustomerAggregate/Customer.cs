@@ -1,14 +1,16 @@
 ﻿using Ardalis.GuardClauses;
 using ErrorOr;
 using Talabat.SharedKernal;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
+using CartEntity = Talabat.Users.Domain.CustomerAggregate.Cart.Cart;
 
-namespace Talabat.Users;
+namespace Talabat.Users.Domain.CustomerAggregate;
 
 internal class Customer : AggregateRoot
 {
 	public string Email { get; private set; } = string.Empty;
 
-	public Cart? Cart { get; private set; } = null;
+	public CartEntity? Cart { get; private set; } = null;
 
 	private readonly List<CustomerAddress> _addresses = new();
 	public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
@@ -36,7 +38,7 @@ internal class Customer : AggregateRoot
 			return CustomerErrors.UpdateCartWithActiveCheckoutSession;
 
 		if (Cart is null)
-			Cart = new Cart(productOwner);
+			Cart = new CartEntity(productOwner);
 
 		if (Cart.MerchantId != productOwner)
 			return CustomerErrors.MerchantMismatch;

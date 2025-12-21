@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Talabat.Users.Domain.CustomerAggregate;
 
-namespace Talabat.Users;
+namespace Talabat.Users.Data.Repositories;
 
 internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 {

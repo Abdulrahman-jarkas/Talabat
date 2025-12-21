@@ -3,6 +3,10 @@ using MediatR;
 using Talabat.Orders.Contracts;
 using Talabat.Payments.Contracts;
 using Talabat.Products.Contracts;
+using Talabat.Users.Data.Repositories;
+using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 
 namespace Talabat.Users;
 

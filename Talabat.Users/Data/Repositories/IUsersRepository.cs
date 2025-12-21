@@ -1,4 +1,6 @@
-﻿namespace Talabat.Users;
+﻿using Talabat.Users.Domain.CustomerAggregate;
+
+namespace Talabat.Users.Data.Repositories;
 
 internal interface IUsersRepository
 {
