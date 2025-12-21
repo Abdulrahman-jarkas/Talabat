@@ -7,9 +7,9 @@ namespace Talabat.Payments;
 
 public class PaymentService(IPaymentsRepository paymentsRepository, ISender sender, IPublisher publisher) : IPaymentService
 {
-	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(int checkoutSessionId, decimal amount)
+	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(Guid invoiceId, decimal amount)
 	{
-		var payment = new Payment(Guid.NewGuid(), "", checkoutSessionId);
+		var payment = new Payment(Guid.NewGuid(), "", invoiceId);
 
 		await paymentsRepository.AddPaymentAsync(payment);
 		await paymentsRepository.SaveChangesAsync();
