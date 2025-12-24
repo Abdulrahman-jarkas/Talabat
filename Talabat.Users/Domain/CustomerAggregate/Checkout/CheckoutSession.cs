@@ -3,8 +3,10 @@ using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Checkout;
 
-internal class CheckoutSession : Entity
+internal class CheckoutSession : ValueObject
 {
+	public Guid Id { get; }
+	
 	private readonly List<CheckoutItem> _items = new();
 	public IReadOnlyCollection<CheckoutItem> Items => _items.AsReadOnly();
 
@@ -13,14 +15,14 @@ internal class CheckoutSession : Entity
 	public Guid? AddressId { get; private set; } = null;
 	public Guid? OrderId { get; private set; } = null;
 
-	public decimal TotalPrice => _items.Sum(i => i.BasePrice * i.BasePrice);
+	public decimal TotalPrice => _items.Sum(i => i.BasePrice * i.Quantity);
 
-	internal CheckoutSession(Guid userId, Guid merchantId, IEnumerable<CheckoutItem> checkoutItems)
+	internal CheckoutSession(Guid userId, Guid merchantId, IEnumerable<CheckoutItem> checkoutItems, Guid? id = null)
 	{
+		Id = id ?? Guid.NewGuid();
 		UserId = Guard.Against.Default(userId, nameof(userId));
 		MerchantId = Guard.Against.Default(merchantId, nameof(merchantId));
 
-		//@TODO: how check that items is valid, so the products not repeated by example
 		Guard.Against.NullOrEmpty(checkoutItems, nameof(checkoutItems));
 		_items.AddRange(checkoutItems);
 	}
@@ -30,8 +32,23 @@ internal class CheckoutSession : Entity
 		AddressId = addressId;
 	}
 
+	public override IEnumerable<object> GetEqualityComponents()
+	{
+		yield return Id;
+		yield return UserId;
+		yield return MerchantId;
+		if (AddressId.HasValue)
+			yield return AddressId.Value;
+		if (OrderId.HasValue)
+			yield return OrderId.Value;
+		foreach (var item in _items)
+		{
+			yield return item;
+		}
+	}
+
+	// For EF Core deserialization
 	private CheckoutSession()
 	{
-		// EF
 	}
 }

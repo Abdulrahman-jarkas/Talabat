@@ -2,4 +2,4 @@
 
 namespace Talabat.Payments.Contracts;
 
-public record PaymentSuccessedEvent(Guid PaymentId) : INotification;
+public record PaymentSuccessedEvent(Guid PaymentId, Guid CustomerId) : INotification;

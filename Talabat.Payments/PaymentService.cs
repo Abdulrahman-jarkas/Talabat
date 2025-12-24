@@ -1,5 +1,4 @@
-﻿
-using ErrorOr;
+﻿using ErrorOr;
 using MediatR;
 using Talabat.Payments.Contracts;
 
@@ -7,9 +6,9 @@ namespace Talabat.Payments;
 
 public class PaymentService(IPaymentsRepository paymentsRepository, ISender sender, IPublisher publisher) : IPaymentService
 {
-	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(Guid invoiceId, decimal amount)
+	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(Guid customerId, Guid checkoutSessionId, decimal amount)
 	{
-		var payment = new Payment(Guid.NewGuid(), "", invoiceId);
+		var payment = new Payment(Guid.NewGuid(), "", customerId, checkoutSessionId);
 
 		await paymentsRepository.AddPaymentAsync(payment);
 		await paymentsRepository.SaveChangesAsync();
@@ -102,7 +101,7 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		payment.SetStatus(PaymentStatus.Paid);
 		await paymentsRepository.SaveChangesAsync();
 
-		await publisher.Publish(new PaymentSuccessedEvent(payment.Id));
+		await publisher.Publish(new PaymentSuccessedEvent(payment.Id, payment.CustomerId));
 
 		return Result.Success;
 	}

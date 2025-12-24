@@ -8,7 +8,7 @@ public class CreatePaymentSessionHandler(IPaymentService paymentService) : IRequ
 {
 	public async Task<ErrorOr<CreatePaymentSessionResponseDto>> Handle(CreatePaymentSessionRequest request, CancellationToken cancellationToken)
 	{
-		var result = await paymentService.CreatePaymentSession(request.CheckoutSessionId, request.Amount);
+		var result = await paymentService.CreatePaymentSession(request.CustomerId, request.CheckoutSessionId, request.Amount);
 
 		if(result.IsError)
 		{

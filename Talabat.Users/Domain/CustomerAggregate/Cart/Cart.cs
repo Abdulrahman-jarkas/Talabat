@@ -4,7 +4,7 @@ using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 
-internal class Cart : Entity
+internal class Cart : ValueObject
 {
 	private readonly List<CartItem> _items = new();
 	public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
@@ -40,5 +40,19 @@ internal class Cart : Entity
 
 		_items.Remove(existingItem);
 		return Result.Updated;
+	}
+
+	public override IEnumerable<object> GetEqualityComponents()
+	{
+		yield return MerchantId;
+		foreach (var item in _items)
+		{
+			yield return item;
+		}
+	}
+
+	// For EF Core deserialization
+	private Cart()
+	{
 	}
 }

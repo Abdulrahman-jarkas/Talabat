@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Talabat.OrderProcessing\Talabat.OrderProcessing.csproj" />
     <ProjectReference Include="..\Talabat.Payments\Talabat.Payments.csproj" />
     <ProjectReference Include="..\Talabat.Taxes\Talabat.Taxes.csproj" />
+    <ProjectReference Include="..\Talabat.Users\Talabat.Users.csproj" />
     <ProjectReference Include="..\Talabat.Vender\Talabat.Vender.csproj" />
   </ItemGroup>
 

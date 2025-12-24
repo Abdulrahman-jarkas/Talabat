@@ -10,6 +10,7 @@
 		<ProjectReference Include="..\Talabat.Orders.Contracts\Talabat.Orders.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
+		<ProjectReference Include="..\Talabat.Users.Contracts\Talabat.Users.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

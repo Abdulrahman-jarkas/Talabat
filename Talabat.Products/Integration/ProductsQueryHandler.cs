@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Talabat.Products.Contracts;
+using Talabat.Products.Data.Repositories;
 
 namespace Talabat.Products.Integration;
 

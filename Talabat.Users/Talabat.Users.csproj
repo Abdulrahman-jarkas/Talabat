@@ -7,6 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Talabat.Orders\Talabat.Orders.csproj" />
 		<ProjectReference Include="..\Talabat.Orders.Contracts\Talabat.Orders.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />
@@ -20,6 +21,12 @@
 		<PackageReference Include="Ardalis.Result" Version="10.1.0" />
 		<PackageReference Include="MediatR" Version="13.0.0" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Talabat.Users.UnitTests" />
+		<InternalsVisibleTo Include="Talabat.Users.IntegrationTests" />
 	</ItemGroup>
 
 </Project>

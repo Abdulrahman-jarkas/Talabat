@@ -3,7 +3,10 @@ using MediatR;
 
 namespace Talabat.Payments.Contracts;
 
-public record CreatePaymentSessionRequest(Guid CheckoutSessionId, decimal Amount) : IRequest<ErrorOr<CreatePaymentSessionResponseDto>>;
+public record CreatePaymentSessionRequest(
+	Guid CustomerId, 
+	Guid CheckoutSessionId, 
+	decimal Amount) : IRequest<ErrorOr<CreatePaymentSessionResponseDto>>;
 
 public record class CreatePaymentSessionResponseDto
 {
