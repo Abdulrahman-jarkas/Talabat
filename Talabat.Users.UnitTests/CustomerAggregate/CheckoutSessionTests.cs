@@ -9,11 +9,9 @@ namespace Talabat.Users.UnitTests.CustomerAggregate;
 public class CheckoutSessionTests
 {
     private static CheckoutSession CreateCheckoutSession(
-        Guid? userId = null,
         Guid? merchantId = null,
         IEnumerable<CheckoutItem>? checkoutItems = null)
     {
-        var user = userId ?? Constants.CheckoutSession.CustomerId;
         var merchant = merchantId ?? Constants.CheckoutSession.MerchantId;
         var items = checkoutItems ?? CheckoutItemFactory.CreateList();
 
@@ -21,40 +19,37 @@ public class CheckoutSessionTests
             "Create",
             BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic,
             null,
-            new[] { typeof(Guid), typeof(Guid), typeof(IEnumerable<CheckoutItem>) },
+            new[] { typeof(Guid), typeof(IEnumerable<CheckoutItem>), typeof(Guid?) },
             null);
 
         if (method == null)
             throw new InvalidOperationException("Could not find CheckoutSession.Create method");
 
-        return (CheckoutSession)method.Invoke(null, new object[] { user, merchant, items })!;
+        return (CheckoutSession)method.Invoke(null, new object?[] { merchant, items, null })!;
     }
 
     [Fact]
     public void Create_WithValidParameters_ShouldCreateCheckoutSession()
     {
         // Arrange
-        var userId = Constants.CheckoutSession.CustomerId;
         var merchantId = Constants.CheckoutSession.MerchantId;
         var checkoutItems = CheckoutItemFactory.CreateList();
 
         // Act
-        var session = CreateCheckoutSession(userId, merchantId, checkoutItems);
+        var session = CreateCheckoutSession(merchantId: merchantId, checkoutItems: checkoutItems);
 
         // Assert
         session.Should().NotBeNull();
-        session.UserId.Should().Be(userId);
         session.MerchantId.Should().Be(merchantId);
         session.Items.Should().HaveCount(checkoutItems.Count);
         session.AddressId.Should().BeNull();
-        session.OrderId.Should().BeNull();
     }
 
     [Fact]
     public void Create_WithMultipleItems_ShouldContainAllItems()
     {
         // Arrange
-        var checkoutItems = CheckoutItemFactory.CreateList(3);
+        var checkoutItems = CheckoutItemFactory.CreateList(count: 3);
 
         // Act
         var session = CreateCheckoutSession(checkoutItems: checkoutItems);
@@ -169,7 +164,7 @@ public class CheckoutSessionTests
         // This should throw an exception because Guard.Against.NullOrEmpty is used
         // When using reflection, the exception is wrapped in TargetInvocationException
         var act = () => CreateCheckoutSession(checkoutItems: emptyItems);
-        act.Should().Throw<Exception>()
+        act.Should().Throw<TargetInvocationException>()
             .WithInnerException<ArgumentException>()
             .WithMessage("*checkoutItems*");
     }
@@ -209,7 +204,7 @@ public class CheckoutSessionTests
         var basePrice = 99.99m;
 
         // Act
-        var item = CheckoutItemFactory.Create(productId, quantity, basePrice);
+        var item = CheckoutItemFactory.Create(productId: productId, quantity: quantity, basePrice: basePrice);
 
         // Assert
         item.ProductId.Should().Be(productId);

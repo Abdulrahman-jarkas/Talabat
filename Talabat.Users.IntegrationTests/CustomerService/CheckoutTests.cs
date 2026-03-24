@@ -52,6 +52,8 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 
 		var customer = await _factory.DbContext.Customers
 			.Include(c => c.Addresses)
+			.Include(c => c.ActiveCheckoutSession)
+				.ThenInclude(cs => cs!.Items)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
 		customer!.AddAddress(Constants.Address.DefaultAddress);
@@ -59,10 +61,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 
 		var addressId = customer.Addresses.First().Id;
 
-		var checkoutSession = await _factory.DbContext.Customers
-			.Where(c => c.Id == Constants.Customer.Id)
-			.Select(c => c.ActiveCheckoutSession)
-			.FirstOrDefaultAsync();
+		var checkoutSession = customer.ActiveCheckoutSession;
 
 		_factory.SetupCreatePaymentSession(
 			Constants.Customer.Id,

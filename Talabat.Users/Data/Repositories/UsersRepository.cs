@@ -8,6 +8,8 @@ internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 	public Task<Customer?> GetCustomerAsync(Guid customerId)
 	{
 		return dbContext.Customers
+			.Include(c => c.ActiveCheckoutSession)
+				.ThenInclude(cs => cs!.Items)
 			.FirstOrDefaultAsync(c => c.Id == customerId);
 	}
 
@@ -15,6 +17,8 @@ internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 	{
 		return dbContext.Customers
 			.Include(c => c.Addresses)
+			.Include(c => c.ActiveCheckoutSession)
+				.ThenInclude(cs => cs!.Items)
 			.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 	}
 

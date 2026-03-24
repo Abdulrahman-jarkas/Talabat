@@ -1,16 +1,16 @@
 ﻿using Ardalis.GuardClauses;
-using System.Text.Json.Serialization;
 using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Checkout;
 
-internal class CheckoutItem : ValueObject
+internal class CheckoutItem : Entity
 {
-	public Guid ProductId { get; init; }
-	public int Quantity { get; init; }
-	public decimal BasePrice { get; init; }
+	public Guid ProductId { get; private set; }
+	public int Quantity { get; private set; }
+	public decimal BasePrice { get; private set; }
 
-	private CheckoutItem(Guid productId, int quantity, decimal basePrice)
+	private CheckoutItem(Guid productId, int quantity, decimal basePrice, Guid? id = null)
+		: base(id ?? Guid.NewGuid())
 	{
 		ProductId = Guard.Against.Default(productId, nameof(productId));
 		Quantity = Guard.Against.NegativeOrZero(quantity, nameof(quantity));
@@ -22,13 +22,6 @@ internal class CheckoutItem : ValueObject
 		return new CheckoutItem(productId, quantity, basePrice);
 	}
 
-	public override IEnumerable<object> GetEqualityComponents()
-	{
-		yield return ProductId;
-		yield return Quantity;
-		yield return BasePrice;
-	}
-
-	[JsonConstructor]
+	// For EF Core deserialization
 	private CheckoutItem() { }
 }

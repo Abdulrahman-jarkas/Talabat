@@ -28,14 +28,14 @@ internal static class CheckoutItemFactory
         return (CheckoutItem)method.Invoke(null, new object[] { product, qty, price })!;
     }
 
-    internal static List<CheckoutItem> CreateList(int count = 2)
+    internal static List<CheckoutItem> CreateList(Guid? checkoutSessionId = null, int count = 2)
     {
         var items = new List<CheckoutItem>();
-        
+
         for (int i = 0; i < count; i++)
         {
             var productId = Guid.NewGuid();
-            items.Add(Create(productId));
+            items.Add(Create(productId: productId));
         }
 
         return items;

@@ -41,6 +41,6 @@ internal class CheckoutSessionFactory : ICheckoutSessionFactory
 				product.BasePrice));
 		}
 
-		return CheckoutSession.Create(userId, cart.MerchantId, checkoutItems);
+		return CheckoutSession.Create(cart.MerchantId, checkoutItems);
 	}
 }

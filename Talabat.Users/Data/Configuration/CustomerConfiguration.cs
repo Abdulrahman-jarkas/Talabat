@@ -30,11 +30,8 @@ internal class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 			.HasValueJsonConverter()
 			.IsRequired(false); // Can be null when cart doesn't exist
 
-		// CheckoutSession as single JSON column (entire value object stored as one JSON)
-		builder.Property(c => c.ActiveCheckoutSession)
-			.HasColumnName("ActiveCheckoutSession")
-			.HasValueJsonConverter()
-			.IsRequired(false); // Can be null when no active checkout
+		// CheckoutSession relationship (One-to-One, configured in CheckoutSessionConfiguration)
+		// Navigation property only, FK is on CheckoutSession side
 
 		// Addresses Collection (One-to-Many relationship)
 		builder.HasMany(a => a.Addresses)

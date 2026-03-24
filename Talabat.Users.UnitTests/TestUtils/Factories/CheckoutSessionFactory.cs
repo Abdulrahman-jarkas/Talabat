@@ -7,11 +7,10 @@ namespace Talabat.Users.UnitTests.TestUtils.Factories;
 internal static class CheckoutSessionFactory
 {
     internal static CheckoutSession Create(
-        Guid? userId = null,
         Guid? merchantId = null,
-        List<CheckoutItem>? checkoutItems = null)
+        List<CheckoutItem>? checkoutItems = null,
+        Guid? sessionId = null)
     {
-        var user = userId ?? Constants.Customer.Id;
         var merchant = merchantId ?? Constants.Merchant.Id;
         var items = checkoutItems ?? CheckoutItemFactory.CreateList();
 
@@ -19,12 +18,12 @@ internal static class CheckoutSessionFactory
             "Create",
             BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic,
             null,
-            new[] { typeof(Guid), typeof(Guid), typeof(IEnumerable<CheckoutItem>) },
+            new[] { typeof(Guid), typeof(IEnumerable<CheckoutItem>), typeof(Guid?) },
             null);
 
         if (method == null)
             throw new InvalidOperationException("Could not find CheckoutSession.Create method");
 
-        return (CheckoutSession)method.Invoke(null, new object[] { user, merchant, items })!;
+        return (CheckoutSession)method.Invoke(null, new object?[] { merchant, items, sessionId })!;
     }
 }

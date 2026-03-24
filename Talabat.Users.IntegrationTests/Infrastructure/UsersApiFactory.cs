@@ -37,6 +37,9 @@ public class UsersApiFactory : IAsyncLifetime
             .Options;
 
         DbContext = new UsersDbContext(options);
+
+        // Ensure database is deleted and recreated with the new schema
+        await DbContext.Database.EnsureDeletedAsync();
         await DbContext.Database.EnsureCreatedAsync();
 
         MockMediator = Substitute.For<ISender>();

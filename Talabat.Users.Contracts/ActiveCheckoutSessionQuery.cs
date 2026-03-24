@@ -6,7 +6,6 @@ public record ActiveCheckoutSessionQuery(Guid CustomerId) : IRequest<ActiveCheck
 
 public record ActiveCheckoutSessionResponse(
 	Guid CheckoutSessionId,
-	Guid UserId,
 	Guid MerchantId,
 	Guid? AddressId,
 	IReadOnlyList<CheckoutSessionItemResponse> Items);

@@ -29,7 +29,6 @@ internal class ActiveCheckoutSessionQueryHandler(IUsersRepository usersRepositor
 
 		return new ActiveCheckoutSessionResponse(
 			checkoutSession.Id,
-			checkoutSession.UserId,
 			checkoutSession.MerchantId,
 			checkoutSession.AddressId,
 			items);
