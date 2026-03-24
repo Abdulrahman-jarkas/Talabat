@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11612.150 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Vender", "Talabat.Vender\Talabat.Vender.csproj", "{8DD06DF2-A5E0-452D-9FDB-B61AE49B6568}"
 EndProject
@@ -26,8 +26,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Products Module", "Products Module", "{A959CEAE-4900-4538-897E-DB8C7139E01D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Users Module", "Users Module", "{4AF0EDE6-2E94-4DEE-B957-167AF8C149FC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Taxes And Fees Module", "Taxes And Fees Module", "{09C7A9AD-261E-48A2-A52C-FB01DAF5752F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Payments Module", "Payments Module", "{A769BB6A-90CE-423C-B17A-BEC77A497E23}"
 EndProject

@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using System.Text.Json.Serialization;
 using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Checkout;
@@ -6,7 +7,7 @@ namespace Talabat.Users.Domain.CustomerAggregate.Checkout;
 internal class CheckoutSession : ValueObject
 {
 	public Guid Id { get; }
-	
+
 	private readonly List<CheckoutItem> _items = new();
 	public IReadOnlyCollection<CheckoutItem> Items => _items.AsReadOnly();
 
@@ -17,7 +18,7 @@ internal class CheckoutSession : ValueObject
 
 	public decimal TotalPrice => _items.Sum(i => i.BasePrice * i.Quantity);
 
-	internal CheckoutSession(Guid userId, Guid merchantId, IEnumerable<CheckoutItem> checkoutItems, Guid? id = null)
+	private CheckoutSession(Guid userId, Guid merchantId, IEnumerable<CheckoutItem> checkoutItems, Guid? id = null)
 	{
 		Id = id ?? Guid.NewGuid();
 		UserId = Guard.Against.Default(userId, nameof(userId));
@@ -25,6 +26,11 @@ internal class CheckoutSession : ValueObject
 
 		Guard.Against.NullOrEmpty(checkoutItems, nameof(checkoutItems));
 		_items.AddRange(checkoutItems);
+	}
+
+	public static CheckoutSession Create(Guid userId, Guid merchantId, IEnumerable<CheckoutItem> checkoutItems)
+	{
+		return new CheckoutSession(userId, merchantId, checkoutItems);
 	}
 
 	public void SetAddress(Guid addressId)
@@ -48,6 +54,7 @@ internal class CheckoutSession : ValueObject
 	}
 
 	// For EF Core deserialization
+	[JsonConstructor]
 	private CheckoutSession()
 	{
 	}

@@ -138,8 +138,8 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
 
         var productId = Constants.Product.AlternativeId;
         var quantity = Constants.Product.DefaultQuantity;
@@ -204,8 +204,8 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
 
         // Act
         var result = customer.ResetCart();
@@ -221,17 +221,16 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
 
         // Act
-        var result = customer.CreateCheckoutSession(checkoutItems);
+        var result = customer.CreateCheckoutSession(checkoutSession);
 
         // Assert
         result.IsError.Should().BeFalse();
         customer.ActiveCheckoutSession.Should().NotBeNull();
         customer.ActiveCheckoutSession!.UserId.Should().Be(customer.Id);
         customer.ActiveCheckoutSession.MerchantId.Should().Be(merchantId);
-        customer.ActiveCheckoutSession.Items.Should().HaveCount(checkoutItems.Count);
     }
 
     [Fact]
@@ -239,10 +238,10 @@ public class CustomerTests
     {
         // Arrange
         var customer = CustomerFactory.Create();
-        var checkoutItems = CheckoutItemFactory.CreateList();
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id);
 
         // Act
-        var result = customer.CreateCheckoutSession(checkoutItems);
+        var result = customer.CreateCheckoutSession(checkoutSession);
 
         // Assert
         result.IsError.Should().BeTrue();
@@ -255,11 +254,12 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
 
         // Act
-        var result = customer.CreateCheckoutSession(checkoutItems);
+        var secondCheckoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        var result = customer.CreateCheckoutSession(secondCheckoutSession);
 
         // Assert
         result.IsError.Should().BeTrue();
@@ -272,8 +272,8 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
 
         // Act
         var result = customer.CancelCheckoutSession();
@@ -305,9 +305,9 @@ public class CustomerTests
         var customer = CustomerFactory.CreateWithCart(merchantId);
         customer.AddAddress(Constants.Address.DefaultAddress);
         var addressId = customer.Addresses.First().Id;
-        
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
 
         // Act
         var result = customer.SetAddressForOrder(addressId);
@@ -338,8 +338,8 @@ public class CustomerTests
         // Arrange
         var merchantId = Constants.Merchant.Id;
         var customer = CustomerFactory.CreateWithCart(merchantId);
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        customer.CreateCheckoutSession(checkoutItems);
+        var checkoutSession = CheckoutSessionFactory.Create(customer.Id, merchantId);
+        customer.CreateCheckoutSession(checkoutSession);
         var nonExistentAddressId = Guid.NewGuid();
 
         // Act

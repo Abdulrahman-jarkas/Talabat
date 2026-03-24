@@ -3,6 +3,7 @@ using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.Domain.CustomerAggregate;
 using Talabat.Users.IntegrationTests.Infrastructure;
+using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
@@ -31,8 +32,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
 
         _factory.SetupProductQuery(productId, productResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         // Act
         var result = await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
@@ -41,8 +41,6 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
         result.IsError.Should().BeFalse();
 
         var customer = await _factory.DbContext.Customers
-            .Include(c => c.Cart)
-            .ThenInclude(cart => cart!.Items)
             .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
         customer.Should().NotBeNull();
@@ -70,8 +68,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
 
         _factory.SetupProductQuery(productId, productResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(productId, initialQuantity, CancellationToken.None);
 
@@ -82,8 +79,6 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
         result.IsError.Should().BeFalse();
 
         var customer = await _factory.DbContext.Customers
-            .Include(c => c.Cart)
-            .ThenInclude(cart => cart!.Items)
             .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
         customer!.Cart!.Items.Should().HaveCount(1);
@@ -99,15 +94,14 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
 
         _factory.SetupProductQuery(productId, null);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         // Act
         var result = await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
         // Assert
         result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("NoProductFoundForCartItem");
+        result.FirstError.Code.Should().Contain("CartItem.ProductNotFound");
     }
 
     [Fact]
@@ -135,8 +129,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>
         _factory.SetupProductQuery(firstProductId, firstProductResponse);
         _factory.SetupProductQuery(secondProductId, secondProductResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(firstProductId, quantity, CancellationToken.None);
 

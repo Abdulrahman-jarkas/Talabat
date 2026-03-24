@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
+using Talabat.Users.Application.Services;
 using Talabat.Users.Data.Repositories;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
 
@@ -8,12 +10,14 @@ namespace Talabat.Users.IntegrationTests.TestUtils;
 
 internal static class TestHelper
 {
-    internal static async Task<(Users.CustomerService service, UsersRepository repository)> CreateCustomerServiceAsync(
+    internal static Task<(Users.CustomerService service, UsersRepository repository)> CreateCustomerServiceAsync(
         UsersApiFactory factory)
     {
         var repository = new UsersRepository(factory.DbContext);
-        var service = new Users.CustomerService(factory.MockMediator, repository);
-        return (service, repository);
+        var productService = new ProductService(factory.MockMediator);
+        var checkoutSessionFactory = new CheckoutSessionFactory();
+        var service = new Users.CustomerService(factory.MockMediator, repository, productService, checkoutSessionFactory);
+        return Task.FromResult((service, repository));
     }
 
     internal static async Task SetupCartWithProductAsync(

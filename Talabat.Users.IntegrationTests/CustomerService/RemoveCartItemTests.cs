@@ -4,6 +4,7 @@ using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
+using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
@@ -32,8 +33,7 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>
 
         _factory.SetupProductQuery(productId, productResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
@@ -43,9 +43,8 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>
         // Assert
         result.IsError.Should().BeFalse();
 
+        _factory.DbContext.ChangeTracker.Clear();
         var customer = await _factory.DbContext.Customers
-            .Include(c => c.Cart)
-            .ThenInclude(cart => cart!.Items)
             .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
         customer!.Cart!.Items.Should().BeEmpty();
@@ -57,15 +56,14 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>
         // Arrange
         var productId = Constants.Product.Id;
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         // Act
         var result = await customerService.RemoveCartItemAsync(productId, CancellationToken.None);
 
         // Assert
         result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("CartNotFound");
+        result.FirstError.Code.Should().Contain("CartItem.NotFound");
     }
 
     [Fact]
@@ -92,8 +90,7 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>
         _factory.SetupProductQuery(firstProductId, firstProductResponse);
         _factory.SetupProductQuery(secondProductId, secondProductResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(firstProductId, quantity, CancellationToken.None);
         await customerService.AddCartItemAsync(secondProductId, quantity, CancellationToken.None);
@@ -105,8 +102,6 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>
         result.IsError.Should().BeFalse();
 
         var customer = await _factory.DbContext.Customers
-            .Include(c => c.Cart)
-            .ThenInclude(cart => cart!.Items)
             .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
         customer!.Cart!.Items.Should().HaveCount(1);

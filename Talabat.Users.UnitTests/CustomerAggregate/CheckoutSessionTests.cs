@@ -17,16 +17,17 @@ public class CheckoutSessionTests
         var merchant = merchantId ?? Constants.CheckoutSession.MerchantId;
         var items = checkoutItems ?? CheckoutItemFactory.CreateList();
 
-        var constructor = typeof(CheckoutSession).GetConstructor(
-            BindingFlags.NonPublic | BindingFlags.Instance,
+        var method = typeof(CheckoutSession).GetMethod(
+            "Create",
+            BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic,
             null,
             new[] { typeof(Guid), typeof(Guid), typeof(IEnumerable<CheckoutItem>) },
             null);
 
-        if (constructor == null)
-            throw new InvalidOperationException("Could not find CheckoutSession constructor");
+        if (method == null)
+            throw new InvalidOperationException("Could not find CheckoutSession.Create method");
 
-        return (CheckoutSession)constructor.Invoke(new object[] { user, merchant, items });
+        return (CheckoutSession)method.Invoke(null, new object[] { user, merchant, items })!;
     }
 
     [Fact]

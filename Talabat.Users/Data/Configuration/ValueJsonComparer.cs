@@ -11,13 +11,15 @@ public class ValueJsonComparer<T> : ValueComparer<T>
 	{
 		DefaultIgnoreCondition = JsonIgnoreCondition.Never,
 		NumberHandling = JsonNumberHandling.AllowReadingFromString,
-		PropertyNameCaseInsensitive = false
+		PropertyNameCaseInsensitive = false,
+		IncludeFields = true,
+		PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate
 	};
 
 	public ValueJsonComparer() : base(
-	  (l, r) => JsonSerializer.Serialize(l, JsonOptions) == JsonSerializer.Serialize(r, JsonOptions),
-	  v => v == null ? 0 : JsonSerializer.Serialize(v, JsonOptions).GetHashCode(),
-	  v => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(v, JsonOptions), JsonOptions)!)
+		(l, r) => JsonSerializer.Serialize(l, JsonOptions) == JsonSerializer.Serialize(r, JsonOptions),
+		v => v == null ? 0 : JsonSerializer.Serialize(v, JsonOptions).GetHashCode(),
+		v => v) // Return the same instance instead of deserializing - simpler snapshot
 	{
 	}
 }
@@ -28,7 +30,9 @@ public class ValueJsonConverter<T> : ValueConverter<T, string>
 	{
 		DefaultIgnoreCondition = JsonIgnoreCondition.Never,
 		NumberHandling = JsonNumberHandling.AllowReadingFromString,
-		PropertyNameCaseInsensitive = false
+		PropertyNameCaseInsensitive = false,
+		IncludeFields = true,
+		PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate
 	};
 
 	public ValueJsonConverter(ConverterMappingHints? mappingHints = null)

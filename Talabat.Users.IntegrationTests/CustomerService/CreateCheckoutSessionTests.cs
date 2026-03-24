@@ -4,6 +4,7 @@ using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
+using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
@@ -35,8 +36,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
         _factory.SetupProductQuery(productId, productResponse);
         _factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
@@ -47,8 +47,6 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
         result.IsError.Should().BeFalse();
 
         var customer = await _factory.DbContext.Customers
-            .Include(c => c.ActiveCheckoutSession)
-            .ThenInclude(cs => cs!.Items)
             .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
         customer.Should().NotBeNull();
@@ -63,15 +61,14 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
     public async Task CreateCheckoutSession_WithEmptyCart_ShouldReturnCartNotFoundError()
     {
         // Arrange
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         // Act
         var result = await customerService.CreateCheckoutSession(CancellationToken.None);
 
         // Assert
         result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("CartNotFound");
+        result.FirstError.Code.Should().Contain("CartItems.ProductsNotFound");
     }
 
     [Fact]
@@ -93,8 +90,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
         _factory.SetupProductQuery(productId, productResponse);
         _factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
         await customerService.CreateCheckoutSession(CancellationToken.None);
@@ -124,8 +120,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
         _factory.SetupProductQuery(productId, productResponse);
         _factory.SetupProductsQuery(new List<Guid> { productId }, null);
 
-        var repository = new UsersRepository(_factory.DbContext);
-        var customerService = new Users.CustomerService(_factory.MockMediator, repository);
+        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
 
         await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
@@ -134,6 +129,6 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
 
         // Assert
         result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("NoProductsFoundForCartItems");
+        result.FirstError.Code.Should().Contain("CartItems.ProductsNotFound");
     }
 }

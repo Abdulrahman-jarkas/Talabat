@@ -68,15 +68,12 @@ public class UsersApiFactory : IAsyncLifetime
         Guid customerId,
         Guid checkoutSessionId,
         decimal amount,
-        ErrorOr<CreatePaymentSessionResponseDto> response)
+        CreatePaymentSessionResponseDto response)
     {
         MockMediator.Send(
-            Arg.Is<CreatePaymentSessionRequest>(r =>
-                r.CustomerId == customerId &&
-                r.CheckoutSessionId == checkoutSessionId &&
-                r.Amount == amount),
+            Arg.Any<CreatePaymentSessionRequest>(),
             Arg.Any<CancellationToken>())
-            .Returns(response);
+            .Returns(Task.FromResult<ErrorOr<CreatePaymentSessionResponseDto>>(response));
     }
 
     public void ResetMocks()

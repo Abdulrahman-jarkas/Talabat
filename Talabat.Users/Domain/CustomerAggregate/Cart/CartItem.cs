@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using System.Text.Json.Serialization;
 using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Cart;
@@ -24,4 +25,8 @@ internal class CartItem : ValueObject
 		yield return ProductId;
 		yield return Quantity;
 	}
+
+	// EF core
+	[JsonConstructor]
+	private CartItem() { }
 }

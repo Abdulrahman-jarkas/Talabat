@@ -1,5 +1,6 @@
 ﻿using Ardalis.GuardClauses;
 using ErrorOr;
+using System.Text.Json.Serialization;
 using Talabat.SharedKernal;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Cart;
@@ -52,6 +53,7 @@ internal class Cart : ValueObject
 	}
 
 	// For EF Core deserialization
+	[JsonConstructor]
 	private Cart()
 	{
 	}
