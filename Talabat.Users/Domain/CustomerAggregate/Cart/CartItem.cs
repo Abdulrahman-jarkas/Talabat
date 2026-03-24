@@ -7,7 +7,7 @@ namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 internal class CartItem : ValueObject
 {
 	public Guid ProductId { get; init; }
-	public int Quantity { get; private set; }
+	public int Quantity { get; init; }
 
 	private CartItem(Guid customerId, int quantity)
 	{

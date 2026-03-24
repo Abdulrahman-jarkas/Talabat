@@ -7,14 +7,15 @@ namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 
 internal class Cart : ValueObject
 {
-	private readonly List<CartItem> _items = new();
+	private List<CartItem> _items = new();
 	public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
 
-	public Guid MerchantId { get; }
+	public Guid MerchantId { get; init; }
 
 	internal Cart(Guid merchantId)
 	{
 		MerchantId = Guard.Against.Default(merchantId);
+		_items = new List<CartItem>();
 	}
 
 	public ErrorOr<Updated> SetCartItem(Guid productId, int quantity)

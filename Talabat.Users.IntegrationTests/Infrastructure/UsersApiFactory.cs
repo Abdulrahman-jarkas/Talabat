@@ -19,68 +19,100 @@ namespace Talabat.Users.IntegrationTests.Infrastructure;
 
 public class UsersApiFactory : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithDatabase("usersdb")
-        .WithUsername("testuser")
-        .WithPassword("testpass")
-        .Build();
+	private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
+		.WithDatabase("usersdb")
+		.WithUsername("testuser")
+		.WithPassword("testpass")
+		.Build();
 
-    public UsersDbContext DbContext { get; private set; } = null!;
-    public ISender MockMediator { get; private set; } = null!;
+	public UsersDbContext DbContext { get; private set; } = null!;
+	public ISender MockMediator { get; private set; } = null!;
 
-    public async Task InitializeAsync()
-    {
-        await _dbContainer.StartAsync();
+	public async Task InitializeAsync()
+	{
+		await _dbContainer.StartAsync();
 
-        var options = new DbContextOptionsBuilder<UsersDbContext>()
-            .UseNpgsql(_dbContainer.GetConnectionString())
-            .Options;
+		var options = new DbContextOptionsBuilder<UsersDbContext>()
+			.UseNpgsql(_dbContainer.GetConnectionString())
+			.Options;
 
-        DbContext = new UsersDbContext(options);
+		DbContext = new UsersDbContext(options);
 
-        // Ensure database is deleted and recreated with the new schema
-        await DbContext.Database.EnsureDeletedAsync();
-        await DbContext.Database.EnsureCreatedAsync();
+		await DbContext.Database.EnsureCreatedAsync();
 
-        MockMediator = Substitute.For<ISender>();
-    }
+		MockMediator = Substitute.For<ISender>();
+	}
 
-    public async Task DisposeAsync()
-    {
-        await DbContext.DisposeAsync();
-        await _dbContainer.DisposeAsync();
-    }
+	public async Task DisposeAsync()
+	{
+		await DbContext.DisposeAsync();
+		await _dbContainer.DisposeAsync();
+	}
 
-    public void SetupProductQuery(Guid productId, ProductResponse? response)
-    {
-        MockMediator.Send(
-            Arg.Is<ProductQuery>(q => q.ProductId == productId),
-            Arg.Any<CancellationToken>())
-            .Returns(response);
-    }
+	public void SetupProductQuery(Guid productId, ProductResponse? response)
+	{
+		MockMediator.Send(
+			Arg.Is<ProductQuery>(q => q.ProductId == productId),
+			Arg.Any<CancellationToken>())
+			.Returns(response);
+	}
 
-    public void SetupProductsQuery(List<Guid> productIds, List<ProductResponse>? response)
-    {
-        MockMediator.Send(
-            Arg.Is<ProductsQuery>(q => q.ProductIds.SequenceEqual(productIds)),
-            Arg.Any<CancellationToken>())
-            .Returns(response);
-    }
+	public void SetupProductsQuery(List<Guid> productIds, List<ProductResponse>? response)
+	{
+		MockMediator.Send(
+			Arg.Is<ProductsQuery>(q => q.ProductIds.SequenceEqual(productIds)),
+			Arg.Any<CancellationToken>())
+			.Returns(response);
+	}
 
-    public void SetupCreatePaymentSession(
-        Guid customerId,
-        Guid checkoutSessionId,
-        decimal amount,
-        CreatePaymentSessionResponseDto response)
-    {
-        MockMediator.Send(
-            Arg.Any<CreatePaymentSessionRequest>(),
-            Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<ErrorOr<CreatePaymentSessionResponseDto>>(response));
-    }
+	public void SetupCreatePaymentSession(
+		Guid customerId,
+		Guid checkoutSessionId,
+		decimal amount,
+		CreatePaymentSessionResponseDto response)
+	{
+		MockMediator.Send(
+			Arg.Any<CreatePaymentSessionRequest>(),
+			Arg.Any<CancellationToken>())
+			.Returns(Task.FromResult<ErrorOr<CreatePaymentSessionResponseDto>>(response));
+	}
 
-    public void ResetMocks()
-    {
-        MockMediator.ClearReceivedCalls();
-    }
+	public void ResetMocks()
+	{
+		MockMediator.ClearReceivedCalls();
+	}
+
+	/// <summary>
+	/// Resets the database to a clean state and seeds required test data.
+	/// Called before each test to ensure isolation.
+	/// </summary>
+	public async Task ResetDatabaseAsync()
+	{
+		// Check if test customer exists
+		var existingCustomer = await DbContext.Customers
+			.FirstOrDefaultAsync(c => c.Id == TestConstants.Constants.Customer.Id);
+
+		if (existingCustomer != null)
+		{
+			// Remove customer - cascade delete will handle all related entities
+			// (checkout sessions, checkout items, addresses, etc.)
+			// Cart is a JSON column so it's removed with the customer row
+			DbContext.Customers.Remove(existingCustomer);
+			await DbContext.SaveChangesAsync();
+		}
+
+		// Create a fresh customer in initial state
+		var customer = new Talabat.Users.Domain.CustomerAggregate.Customer(
+			TestConstants.Constants.Customer.Email,
+			TestConstants.Constants.Customer.Id);
+
+		DbContext.Customers.Add(customer);
+		await DbContext.SaveChangesAsync();
+
+		// Clear change tracker to ensure fresh state for tests
+		DbContext.ChangeTracker.Clear();
+
+		// Reset mocks to ensure clean state
+		ResetMocks();
+	}
 }

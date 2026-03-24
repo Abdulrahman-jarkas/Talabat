@@ -4,20 +4,32 @@ using Microsoft.EntityFrameworkCore;
 using Talabat.Payments.Contracts;
 using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
+using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
 using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
-public class CheckoutTests : IClassFixture<UsersApiFactory>
+public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 {
 	private readonly UsersApiFactory _factory;
+	private Users.CustomerService _customerService = null!;
 
 	public CheckoutTests(UsersApiFactory factory)
 	{
 		_factory = factory;
 	}
+
+	public async Task InitializeAsync()
+	{
+		await _factory.ResetDatabaseAsync();
+		_customerService = TestHelper.CreateCustomerServiceAsync(_factory);
+	}
+
+	public Task DisposeAsync() => Task.CompletedTask;
 
 	[Fact]
 	public async Task Checkout_WithValidData_ShouldReturnPaymentIdAndUrl()
@@ -36,32 +48,28 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 
 		var productsResponse = new List<ProductResponse> { productResponse };
 
-		_factory.SetupProductQuery(productId, productResponse);
-		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
-
 		var paymentResponse = new CreatePaymentSessionResponseDto
 		{
 			PaymentId = Constants.Payment.PaymentId,
 			PaymentUrl = Constants.Payment.PaymentUrl
 		};
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		// Setup product mock and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
-		await customerService.CreateCheckoutSession(CancellationToken.None);
+		// Setup products query for checkout session
+		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponse);
+		await _customerService.CreateCheckoutSession(CancellationToken.None);
+
+		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
 		var customer = await _factory.DbContext.Customers
-			.Include(c => c.Addresses)
 			.Include(c => c.ActiveCheckoutSession)
 				.ThenInclude(cs => cs!.Items)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
-		customer!.AddAddress(Constants.Address.DefaultAddress);
-		await _factory.DbContext.SaveChangesAsync();
-
-		var addressId = customer.Addresses.First().Id;
-
-		var checkoutSession = customer.ActiveCheckoutSession;
+		var checkoutSession = customer!.ActiveCheckoutSession;
 
 		_factory.SetupCreatePaymentSession(
 			Constants.Customer.Id,
@@ -70,7 +78,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 			paymentResponse);
 
 		// Act
-		var result = await customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -82,23 +90,14 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 	public async Task Checkout_WithoutActiveCheckoutSession_ShouldReturnCheckoutSessionNotFoundError()
 	{
 		// Arrange
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-		var customer = await _factory.DbContext.Customers
-			.Include(c => c.Addresses)
-			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
-
-		customer!.AddAddress(Constants.Address.DefaultAddress);
-		await _factory.DbContext.SaveChangesAsync();
-
-		var addressId = customer.Addresses.First().Id;
+		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
 		// Act
-		var result = await customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("Cart.NotFound");
+		result.FirstError.Code.Should().Be(CartErrors.CartNotFound.Code);
 	}
 
 	[Fact]
@@ -118,20 +117,20 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 
 		var productsResponse = new List<ProductResponse> { productResponse };
 
-		_factory.SetupProductQuery(productId, productResponse);
-		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
+		// Setup product mock and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
-		await customerService.CreateCheckoutSession(CancellationToken.None);
+		// Setup products query for checkout session
+		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponse);
+		await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Act
-		var result = await customerService.Checkout(invalidAddressId, CancellationToken.None);
+		var result = await _customerService.Checkout(invalidAddressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("AddressNotFound");
+		result.FirstError.Code.Should().Be(CustomerErrors.AddressNotFound.Code);
 	}
 
 	[Fact]
@@ -159,31 +158,24 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>
 		var productsResponseOriginal = new List<ProductResponse> { productResponseOriginal };
 		var productsResponseChanged = new List<ProductResponse> { productResponseChanged };
 
-		_factory.SetupProductQuery(productId, productResponseOriginal);
-		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponseOriginal);
+		// Setup product mock with original price and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, originalPrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		// Setup products query for checkout session with original price
+		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponseOriginal);
+		await _customerService.CreateCheckoutSession(CancellationToken.None);
 
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
-		await customerService.CreateCheckoutSession(CancellationToken.None);
-
-		var customer = await _factory.DbContext.Customers
-			.Include(c => c.Addresses)
-			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
-
-		customer!.AddAddress(Constants.Address.DefaultAddress);
-		await _factory.DbContext.SaveChangesAsync();
-
-		var addressId = customer.Addresses.First().Id;
+		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
 		// Simulate price change before checkout
 		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponseChanged);
 
 		// Act
-		var result = await customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("PriceMismatch");
+		result.FirstError.Code.Should().Be(CheckoutSessionErrors.PriceMismatch.Code);
 	}
 }

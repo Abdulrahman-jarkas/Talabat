@@ -10,20 +10,35 @@ using Talabat.Users.Domain.CustomerAggregate.Checkout;
 
 namespace Talabat.Users;
 
-internal class CustomerService(ISender sender,
-	IUsersRepository usersRepository,
-	IProductService productService,
-	ICheckoutSessionFactory checkoutSessionFactory) : ICustomerService
+internal class CustomerService : ICustomerService
 {
-	private readonly Guid customerId = Guid.Parse("1fb673f4-6974-478b-b4eb-b9882dd13c5f");
+	private readonly Guid _customerId;
+	private readonly ISender _sender;
+	private readonly IUsersRepository _usersRepository;
+	private readonly IProductService _productService;
+	private readonly ICheckoutSessionFactory _checkoutSessionFactory;
+
+	public CustomerService(
+		Guid customerId,
+		ISender sender,
+		IUsersRepository usersRepository,
+		IProductService productService,
+		ICheckoutSessionFactory checkoutSessionFactory)
+	{
+		_customerId = customerId;
+		_sender = sender;
+		_usersRepository = usersRepository;
+		_productService = productService;
+		_checkoutSessionFactory = checkoutSessionFactory;
+	}
 
 	public async Task<ErrorOr<Success>> AddCartItemAsync(Guid productId, int quantity, CancellationToken cancellationToken)
 	{
-		var customer = await usersRepository.GetCustomerAsync(customerId);
+		var customer = await _usersRepository.GetCustomerAsync(_customerId);
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
-		var product = await sender.Send(new ProductQuery(productId), cancellationToken);
+		var product = await _sender.Send(new ProductQuery(productId), cancellationToken);
 		if (product is null)
 			return CartErrors.NoProductFoundForCartItem(productId);
 
@@ -31,14 +46,14 @@ internal class CustomerService(ISender sender,
 		if (setCartResult.IsError)
 			return setCartResult.Errors;
 
-		await usersRepository.SaveChangesAsync(cancellationToken);
+		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return Result.Success;
 	}
 
 	public async Task<ErrorOr<Success>> RemoveCartItemAsync(Guid productId, CancellationToken cancellationToken)
 	{
-		var customer = await usersRepository.GetCustomerAsync(customerId);
+		var customer = await _usersRepository.GetCustomerAsync(_customerId);
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
@@ -46,14 +61,14 @@ internal class CustomerService(ISender sender,
 		if (setCartResult.IsError)
 			return setCartResult.Errors;
 
-		await usersRepository.SaveChangesAsync(cancellationToken);
+		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return Result.Success;
 	}
 
 	public async Task<ErrorOr<Success>> CreateCheckoutSession(CancellationToken cancellationToken = default)
 	{
-		var customer = await usersRepository.GetCustomerAsync(customerId);
+		var customer = await _usersRepository.GetCustomerAsync(_customerId);
 
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
@@ -61,10 +76,10 @@ internal class CustomerService(ISender sender,
 		if (customer.Cart is null || !customer.Cart.Items.Any())
 			return CartErrors.CartNotFound;
 
-		var checkoutSessionResult = await checkoutSessionFactory.CreateCheckoutSessionAsync(
+		var checkoutSessionResult = await _checkoutSessionFactory.CreateCheckoutSessionAsync(
 			customer.Id,
 			customer.Cart,
-			productService,
+			_productService,
 			cancellationToken);
 
 		if (checkoutSessionResult.IsError)
@@ -74,14 +89,14 @@ internal class CustomerService(ISender sender,
 		if (createResult.IsError)
 			return createResult.Errors;
 
-		await usersRepository.SaveChangesAsync(cancellationToken);
+		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return Result.Success;
 	}
 
 	public async Task<ErrorOr<Success>> CancelCheckoutSession(CancellationToken cancellationToken = default)
 	{
-		var customer = await usersRepository.GetCustomerAsync(customerId);
+		var customer = await _usersRepository.GetCustomerAsync(_customerId);
 
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
@@ -91,14 +106,14 @@ internal class CustomerService(ISender sender,
 		if (cancelResult.IsError)
 			return cancelResult.Errors;
 
-		await usersRepository.SaveChangesAsync(cancellationToken);
+		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return Result.Success;
 	}
 
 	public async Task<ErrorOr<(Guid PaymentId, string PaymentUrl)>> Checkout(Guid addressId, CancellationToken cancellationToken = default)
 	{
-		var customer = await usersRepository.GetCustomerDetailsAsync(customerId, cancellationToken);
+		var customer = await _usersRepository.GetCustomerDetailsAsync(_customerId, cancellationToken);
 
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
@@ -115,7 +130,7 @@ internal class CustomerService(ISender sender,
 			return setAddressResult.Errors;
 
 		var productsIds = customer.Cart.Items.Select(i => i.ProductId).ToList();
-		var products = await sender.Send(new ProductsQuery(productsIds), cancellationToken);
+		var products = await _sender.Send(new ProductsQuery(productsIds), cancellationToken);
 
 		foreach (var item in customer.ActiveCheckoutSession.Items)
 		{
@@ -128,9 +143,9 @@ internal class CustomerService(ISender sender,
 				return CheckoutSessionErrors.PriceMismatch;
 		}
 
-		var paymentSession = await sender.Send(
+		var paymentSession = await _sender.Send(
 			new CreatePaymentSessionRequest(
-				customerId,
+				_customerId,
 				customer.ActiveCheckoutSession.Id,
 				customer.ActiveCheckoutSession.TotalPrice),
 			cancellationToken);
@@ -138,7 +153,7 @@ internal class CustomerService(ISender sender,
 		if (paymentSession.IsError)
 			return paymentSession.Errors;
 
-		await usersRepository.SaveChangesAsync(cancellationToken);
+		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return (paymentSession.Value.PaymentId, paymentSession.Value.PaymentUrl);
 	}

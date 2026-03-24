@@ -2,20 +2,31 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
+using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
 using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
-public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
+public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 {
 	private readonly UsersApiFactory _factory;
+	private Users.CustomerService _customerService = null!;
 
 	public CreateCheckoutSessionTests(UsersApiFactory factory)
 	{
 		_factory = factory;
 	}
+
+	public async Task InitializeAsync()
+	{
+		await _factory.ResetDatabaseAsync();
+		_customerService = TestHelper.CreateCustomerServiceAsync(_factory);
+	}
+
+	public Task DisposeAsync() => Task.CompletedTask;
 
 	[Fact]
 	public async Task CreateCheckoutSession_WithValidCart_ShouldCreateCheckoutSession()
@@ -33,15 +44,15 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
 
 		var productsResponse = new List<ProductResponse> { productResponse };
 
-		_factory.SetupProductQuery(productId, productResponse);
-		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
+		// Setup product mock and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
+		// Setup products query for checkout session validation
+		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponse);
 
 		// Act
-		var result = await customerService.CreateCheckoutSession(CancellationToken.None);
+		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -63,14 +74,14 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
 	public async Task CreateCheckoutSession_WithEmptyCart_ShouldReturnCartNotFoundError()
 	{
 		// Arrange
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		// Use class-level _customerService
 
 		// Act
-		var result = await customerService.CreateCheckoutSession(CancellationToken.None);
+		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("CartItems.ProductsNotFound");
+		result.FirstError.Code.Should().Be(CartErrors.CartNotFound.Code);
 	}
 
 	[Fact]
@@ -89,20 +100,20 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
 
 		var productsResponse = new List<ProductResponse> { productResponse };
 
-		_factory.SetupProductQuery(productId, productResponse);
-		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponse);
+		// Setup product mock and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
-		await customerService.CreateCheckoutSession(CancellationToken.None);
+		// Setup products query for checkout session
+		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponse);
+		await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Act
-		var result = await customerService.CreateCheckoutSession(CancellationToken.None);
+		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("ActiveCheckoutSessionExists");
+		result.FirstError.Code.Should().Be(CustomerErrors.ActiveCheckoutSessionExists.Code);
 	}
 
 	[Fact]
@@ -113,24 +124,18 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>
 		var quantity = Constants.Product.DefaultQuantity;
 		var merchantId = Constants.Merchant.Id;
 
-		var productResponse = new ProductResponse(
-			productId,
-			Constants.Product.Title,
-			merchantId,
-			Constants.Product.BasePrice);
+		// Setup product mock and add to cart
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
 
-		_factory.SetupProductQuery(productId, productResponse);
+		// Setup products query to return null (simulating missing products)
 		_factory.SetupProductsQuery(new List<Guid> { productId }, null);
 
-		var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-		await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
-
 		// Act
-		var result = await customerService.CreateCheckoutSession(CancellationToken.None);
+		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Contain("CartItems.ProductsNotFound");
+		result.FirstError.Code.Should().Be(CartErrors.NoProductsFoundForCartItems.Code);
 	}
 }

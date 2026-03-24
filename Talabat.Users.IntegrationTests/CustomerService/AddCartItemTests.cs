@@ -2,142 +2,131 @@ using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestUtils;
 
 namespace Talabat.Users.IntegrationTests.CustomerService;
 
-public class AddCartItemTests : IClassFixture<UsersApiFactory>
+public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 {
-    private readonly UsersApiFactory _factory;
+	private readonly UsersApiFactory _factory;
+	private Users.CustomerService _customerService = null!;
 
-    public AddCartItemTests(UsersApiFactory factory)
-    {
-        _factory = factory;
-    }
+	public AddCartItemTests(UsersApiFactory factory)
+	{
+		_factory = factory;
+	}
 
-    [Fact]
-    public async Task AddCartItemAsync_WithValidProductAndNoExistingCart_ShouldCreateCartAndAddItem()
-    {
-        // Arrange
-        var productId = Constants.Product.Id;
-        var quantity = Constants.Product.DefaultQuantity;
-        var merchantId = Constants.Merchant.Id;
+	public async Task InitializeAsync()
+	{
+		await _factory.ResetDatabaseAsync();
+		_customerService = TestHelper.CreateCustomerServiceAsync(_factory);
+	}
 
-        var productResponse = new ProductResponse(
-            productId,
-            Constants.Product.Title,
-            merchantId,
-            Constants.Product.BasePrice);
+	public Task DisposeAsync() => Task.CompletedTask;
 
-        _factory.SetupProductQuery(productId, productResponse);
+	[Fact]
+	public async Task AddCartItemAsync_WithValidProductAndNoExistingCart_ShouldCreateCartAndAddItem()
+	{
+		// Arrange
+		var productId = Constants.Product.Id;
+		var quantity = Constants.Product.DefaultQuantity;
+		var merchantId = Constants.Merchant.Id;
 
-        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		var productResponse = new ProductResponse(
+			productId,
+			Constants.Product.Title,
+			merchantId,
+			Constants.Product.BasePrice);
 
-        // Act
-        var result = await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
+		_factory.SetupProductQuery(productId, productResponse);
 
-        // Assert
-        result.IsError.Should().BeFalse();
+		// Act
+		var result = await _customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
-        var customer = await _factory.DbContext.Customers
-            .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
+		// Assert
+		result.IsError.Should().BeFalse();
 
-        customer.Should().NotBeNull();
-        customer!.Cart.Should().NotBeNull();
-        customer.Cart!.Items.Should().HaveCount(1);
-        customer.Cart.Items.First().ProductId.Should().Be(productId);
-        customer.Cart.Items.First().Quantity.Should().Be(quantity);
-        customer.Cart.MerchantId.Should().Be(merchantId);
-    }
+		var customer = await _factory.DbContext.Customers
+			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
-    [Fact]
-    public async Task AddCartItemAsync_WithExistingCartItem_ShouldUpdateQuantity()
-    {
-        // Arrange
-        var productId = Constants.Product.Id;
-        var initialQuantity = Constants.Product.DefaultQuantity;
-        var updatedQuantity = Constants.Product.UpdatedQuantity;
-        var merchantId = Constants.Merchant.Id;
+		customer.Should().NotBeNull();
+		customer!.Cart.Should().NotBeNull();
+		customer.Cart!.Items.Should().HaveCount(1);
+		customer.Cart.Items.First().ProductId.Should().Be(productId);
+		customer.Cart.Items.First().Quantity.Should().Be(quantity);
+		customer.Cart.MerchantId.Should().Be(merchantId);
+	}
 
-        var productResponse = new ProductResponse(
-            productId,
-            Constants.Product.Title,
-            merchantId,
-            Constants.Product.BasePrice);
+	[Fact]
+	public async Task AddCartItemAsync_WithExistingCartItem_ShouldUpdateQuantity()
+	{
+		// Arrange
+		var productId = Constants.Product.Id;
+		var initialQuantity = Constants.Product.DefaultQuantity;
+		var updatedQuantity = Constants.Product.UpdatedQuantity;
+		var merchantId = Constants.Merchant.Id;
 
-        _factory.SetupProductQuery(productId, productResponse);
+		// Setup product mock and add initial cart item
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, productId, initialQuantity);
 
-        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		// Setup mock again for update operation
+		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
 
-        await customerService.AddCartItemAsync(productId, initialQuantity, CancellationToken.None);
+		// Act
+		var result = await _customerService.AddCartItemAsync(productId, updatedQuantity, CancellationToken.None);
 
-        // Act
-        var result = await customerService.AddCartItemAsync(productId, updatedQuantity, CancellationToken.None);
+		// Assert
+		result.IsError.Should().BeFalse();
 
-        // Assert
-        result.IsError.Should().BeFalse();
+		var customer = await _factory.DbContext.Customers
+			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
-        var customer = await _factory.DbContext.Customers
-            .FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
+		customer!.Cart!.Items.Should().HaveCount(1);
+		customer.Cart.Items.First().Quantity.Should().Be(updatedQuantity);
+	}
 
-        customer!.Cart!.Items.Should().HaveCount(1);
-        customer.Cart.Items.First().Quantity.Should().Be(updatedQuantity);
-    }
+	[Fact]
+	public async Task AddCartItemAsync_WithNonExistentProduct_ShouldReturnError()
+	{
+		// Arrange
+		var productId = Constants.Product.Id;
+		var quantity = Constants.Product.DefaultQuantity;
 
-    [Fact]
-    public async Task AddCartItemAsync_WithNonExistentProduct_ShouldReturnError()
-    {
-        // Arrange
-        var productId = Constants.Product.Id;
-        var quantity = Constants.Product.DefaultQuantity;
+		_factory.SetupProductQuery(productId, null);
 
-        _factory.SetupProductQuery(productId, null);
+		// Act
+		var result = await _customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
 
-        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Code.Should().Be(CartErrors.NoProductFoundForCartItem(productId).Code);
+	}
 
-        // Act
-        var result = await customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
+	[Fact]
+	public async Task AddCartItemAsync_WithDifferentMerchant_ShouldReturnMerchantMismatchError()
+	{
+		// Arrange
+		var firstProductId = Constants.Product.Id;
+		var secondProductId = Constants.Product.AlternativeId;
+		var quantity = Constants.Product.DefaultQuantity;
+		var firstMerchantId = Constants.Merchant.Id;
+		var secondMerchantId = Guid.NewGuid();
 
-        // Assert
-        result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("CartItem.ProductNotFound");
-    }
+		// Setup first product and add to cart
+		TestHelper.SetupProductQuery(_factory, firstProductId, firstMerchantId, Constants.Product.BasePrice);
+		await TestHelper.AddProductToCartAsync(_customerService, firstProductId, quantity);
 
-    [Fact]
-    public async Task AddCartItemAsync_WithDifferentMerchant_ShouldReturnMerchantMismatchError()
-    {
-        // Arrange
-        var firstProductId = Constants.Product.Id;
-        var secondProductId = Constants.Product.AlternativeId;
-        var quantity = Constants.Product.DefaultQuantity;
-        var firstMerchantId = Constants.Merchant.Id;
-        var secondMerchantId = Guid.NewGuid();
+		// Setup second product with different merchant
+		TestHelper.SetupProductQuery(_factory, secondProductId, secondMerchantId, Constants.Product.BasePrice);
 
-        var firstProductResponse = new ProductResponse(
-            firstProductId,
-            Constants.Product.Title,
-            firstMerchantId,
-            Constants.Product.BasePrice);
+		// Act
+		var result = await _customerService.AddCartItemAsync(secondProductId, quantity, CancellationToken.None);
 
-        var secondProductResponse = new ProductResponse(
-            secondProductId,
-            "Another Product",
-            secondMerchantId,
-            Constants.Product.BasePrice);
-
-        _factory.SetupProductQuery(firstProductId, firstProductResponse);
-        _factory.SetupProductQuery(secondProductId, secondProductResponse);
-
-        var (customerService, repository) = await TestHelper.CreateCustomerServiceAsync(_factory);
-
-        await customerService.AddCartItemAsync(firstProductId, quantity, CancellationToken.None);
-
-        // Act
-        var result = await customerService.AddCartItemAsync(secondProductId, quantity, CancellationToken.None);
-
-        // Assert
-        result.IsError.Should().BeTrue();
-        result.FirstError.Code.Should().Contain("MerchantMismatch");
-    }
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Code.Should().Be(CustomerErrors.MerchantMismatch.Code);
+	}
 }

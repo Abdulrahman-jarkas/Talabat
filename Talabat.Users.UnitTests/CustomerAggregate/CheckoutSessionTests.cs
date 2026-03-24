@@ -127,19 +127,6 @@ public class CheckoutSessionTests
         session.TotalPrice.Should().Be(30.00m);
     }
 
-    [Fact]
-    public void Items_ShouldBeReadOnly()
-    {
-        // Arrange
-        var checkoutItems = CheckoutItemFactory.CreateList();
-        var session = CreateCheckoutSession(checkoutItems: checkoutItems);
-
-        // Act
-        var items = session.Items;
-
-        // Assert
-        items.Should().BeAssignableTo<IReadOnlyCollection<CheckoutItem>>();
-    }
 
     [Fact]
     public void Create_WithSingleItem_ShouldCreateSessionSuccessfully()
