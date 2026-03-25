@@ -143,6 +143,10 @@ internal class CustomerService : ICustomerService
 		if (paymentSession.IsError)
 			return paymentSession.Errors;
 
+		var setPaymentIdResult = customer.SetPaymentId(paymentSession.Value.PaymentId);
+		if (setPaymentIdResult.IsError)
+			return setPaymentIdResult.Errors;
+
 		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return (paymentSession.Value.PaymentId, paymentSession.Value.PaymentUrl);

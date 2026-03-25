@@ -88,8 +88,11 @@ public class UsersApiFactory : IAsyncLifetime
 	/// </summary>
 	public async Task ResetDatabaseAsync()
 	{
-		// Check if test customer exists
+		// Check if test customer exists and load all related data for proper cascade delete
 		var existingCustomer = await DbContext.Customers
+			.Include(c => c.CheckoutSessions)
+				.ThenInclude(cs => cs.Items)
+			.Include(c => c.Addresses)
 			.FirstOrDefaultAsync(c => c.Id == TestConstants.Constants.Customer.Id);
 
 		if (existingCustomer != null)

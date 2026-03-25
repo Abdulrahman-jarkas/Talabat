@@ -59,7 +59,8 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.OnDelete(DeleteBehavior.Cascade);
 
 		// Relationship with CheckoutItems (One-to-Many)
-		builder.HasMany<CheckoutItem>()
+		// Map to the backing field _items
+		builder.HasMany(cs => cs.Items)
 			.WithOne()
 			.HasForeignKey("CheckoutSessionId")
 			.OnDelete(DeleteBehavior.Cascade);

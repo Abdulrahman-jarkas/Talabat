@@ -69,7 +69,6 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		var customer = await _factory.DbContext.Customers
 			.Include(c => c.CheckoutSessions)
-				.ThenInclude(cs => cs.Items)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
 		var checkoutSession = customer!.ActiveCheckoutSession;
