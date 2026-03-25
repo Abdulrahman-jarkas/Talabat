@@ -7,47 +7,56 @@ namespace Talabat.Users.Domain.CustomerAggregate.Cart;
 
 internal class Cart : ValueObject
 {
-	private List<CartItem> _items = new();
-	public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
+	// Use init to allow JSON deserialization but prevent mutation after construction
+	public IReadOnlyList<CartItem> Items { get; init; } = new List<CartItem>();
 
 	public Guid MerchantId { get; init; }
 
 	internal Cart(Guid merchantId)
 	{
 		MerchantId = Guard.Against.Default(merchantId);
-		_items = new List<CartItem>();
+		Items = new List<CartItem>();
 	}
 
-	public ErrorOr<Updated> SetCartItem(Guid productId, int quantity)
+	// Private constructor for creating new instances with modified items
+	private Cart(Guid merchantId, List<CartItem> items)
 	{
-		var existingItemIndex = _items.FindIndex(i => i.ProductId == productId);
+		MerchantId = merchantId;
+		Items = items;
+	}
+
+	public ErrorOr<Cart> SetCartItem(Guid productId, int quantity)
+	{
+		var newItems = new List<CartItem>(Items);
+		var existingItemIndex = newItems.FindIndex(i => i.ProductId == productId);
 
 		if (existingItemIndex >= 0)
 		{
-			_items[existingItemIndex] = CartItem.Create(productId, quantity);
+			newItems[existingItemIndex] = CartItem.Create(productId, quantity);
 		}
 		else
 		{
-			_items.Add(CartItem.Create(productId, quantity));
+			newItems.Add(CartItem.Create(productId, quantity));
 		}
 
-		return Result.Updated;
+		return new Cart(MerchantId, newItems);
 	}
 
-	public ErrorOr<Updated> RemoveCartItem(Guid productId)
+	public ErrorOr<Cart> RemoveCartItem(Guid productId)
 	{
-		var existingItem = _items.FirstOrDefault(i => i.ProductId == productId);
+		var existingItem = Items.FirstOrDefault(i => i.ProductId == productId);
 		if (existingItem is null)
 			return CartErrors.CartItemNotFound;
 
-		_items.Remove(existingItem);
-		return Result.Updated;
+		var newItems = new List<CartItem>(Items);
+		newItems.Remove(existingItem);
+		return new Cart(MerchantId, newItems);
 	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
 		yield return MerchantId;
-		foreach (var item in _items)
+		foreach (var item in Items)
 		{
 			yield return item;
 		}

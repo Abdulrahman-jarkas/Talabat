@@ -1,3 +1,4 @@
+using Docker.DotNet.Models;
 using ErrorOr;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,8 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
+		_factory.DbContext.ChangeTracker.Clear();
+
 		var customer = await _factory.DbContext.Customers
 			.Include(c => c.ActiveCheckoutSession)
 				.ThenInclude(cs => cs!.Items)
@@ -78,6 +81,8 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 			paymentResponse);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
+
 		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
@@ -93,6 +98,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
@@ -126,6 +132,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.Checkout(invalidAddressId, CancellationToken.None);
 
 		// Assert
@@ -168,10 +175,12 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		var addressId = await TestHelper.AddAddressToCustomerAsync(_factory);
 
+
 		// Simulate price change before checkout
 		_factory.SetupProductsQuery(new List<Guid> { productId }, productsResponseChanged);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert

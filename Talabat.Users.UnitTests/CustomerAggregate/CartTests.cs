@@ -51,9 +51,10 @@ public class CartTests
 
         // Assert
         result.IsError.Should().BeFalse();
-        cart.Items.Should().HaveCount(1);
-        cart.Items.First().ProductId.Should().Be(productId);
-        cart.Items.First().Quantity.Should().Be(quantity);
+        var updatedCart = result.Value;
+        updatedCart.Items.Should().HaveCount(1);
+        updatedCart.Items.First().ProductId.Should().Be(productId);
+        updatedCart.Items.First().Quantity.Should().Be(quantity);
     }
 
     [Fact]
@@ -65,15 +66,16 @@ public class CartTests
         var initialQuantity = Constants.Product.DefaultQuantity;
         var updatedQuantity = Constants.Product.UpdatedQuantity;
 
-        cart.SetCartItem(productId, initialQuantity);
+        cart = cart.SetCartItem(productId, initialQuantity).Value;
 
         // Act
         var result = cart.SetCartItem(productId, updatedQuantity);
 
         // Assert
         result.IsError.Should().BeFalse();
-        cart.Items.Should().HaveCount(1);
-        cart.Items.First().Quantity.Should().Be(updatedQuantity);
+        var updatedCart = result.Value;
+        updatedCart.Items.Should().HaveCount(1);
+        updatedCart.Items.First().Quantity.Should().Be(updatedQuantity);
     }
 
     [Fact]
@@ -86,14 +88,15 @@ public class CartTests
         var quantity = Constants.Product.DefaultQuantity;
 
         // Act
-        cart.SetCartItem(product1Id, quantity);
+        cart = cart.SetCartItem(product1Id, quantity).Value;
         var result = cart.SetCartItem(product2Id, quantity);
 
         // Assert
         result.IsError.Should().BeFalse();
-        cart.Items.Should().HaveCount(2);
-        cart.Items.Should().Contain(item => item.ProductId == product1Id);
-        cart.Items.Should().Contain(item => item.ProductId == product2Id);
+        var updatedCart = result.Value;
+        updatedCart.Items.Should().HaveCount(2);
+        updatedCart.Items.Should().Contain(item => item.ProductId == product1Id);
+        updatedCart.Items.Should().Contain(item => item.ProductId == product2Id);
     }
 
     [Fact]
@@ -103,14 +106,15 @@ public class CartTests
         var cart = CreateCart();
         var productId = Constants.Product.Id;
         var quantity = Constants.Product.DefaultQuantity;
-        cart.SetCartItem(productId, quantity);
+        cart = cart.SetCartItem(productId, quantity).Value;
 
         // Act
         var result = cart.RemoveCartItem(productId);
 
         // Assert
         result.IsError.Should().BeFalse();
-        cart.Items.Should().BeEmpty();
+        var updatedCart = result.Value;
+        updatedCart.Items.Should().BeEmpty();
     }
 
     [Fact]
@@ -137,15 +141,16 @@ public class CartTests
         var product2Id = Constants.Product.AlternativeId;
         var quantity = Constants.Product.DefaultQuantity;
 
-        cart.SetCartItem(product1Id, quantity);
-        cart.SetCartItem(product2Id, quantity);
+        cart = cart.SetCartItem(product1Id, quantity).Value;
+        cart = cart.SetCartItem(product2Id, quantity).Value;
 
         // Act
         var result = cart.RemoveCartItem(product1Id);
 
         // Assert
         result.IsError.Should().BeFalse();
-        cart.Items.Should().HaveCount(1);
-        cart.Items.First().ProductId.Should().Be(product2Id);
+        var updatedCart = result.Value;
+        updatedCart.Items.Should().HaveCount(1);
+        updatedCart.Items.First().ProductId.Should().Be(product2Id);
     }
 }

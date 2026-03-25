@@ -103,8 +103,8 @@ internal static class TestHelper
 
 		var addressValue = address ?? Constants.Address.DefaultAddress;
 		customer!.AddAddress(addressValue);
+
 		await factory.DbContext.SaveChangesAsync();
-		//factory.DbContext.ChangeTracker.Clear();
 
 		return customer.Addresses.Last().Id;
 	}

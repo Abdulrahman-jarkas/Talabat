@@ -44,6 +44,8 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		var result = await _customerService.AddCartItemAsync(productId, quantity, CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
+
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -72,11 +74,10 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_customerService, productId, initialQuantity);
 
-		// Setup mock again for update operation
-		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
-
 		// Act
 		var result = await _customerService.AddCartItemAsync(productId, updatedQuantity, CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
+
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -124,6 +125,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		var result = await _customerService.AddCartItemAsync(secondProductId, quantity, CancellationToken.None);
+
 
 		// Assert
 		result.IsError.Should().BeTrue();

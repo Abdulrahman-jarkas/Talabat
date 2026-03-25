@@ -31,6 +31,16 @@ internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 
 	public Task SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
+		// For JSON columns (like Cart), EF Core might not detect changes automatically
+		// Mark Cart as modified for all tracked Customer entities
+		//var customerEntries = dbContext.ChangeTracker.Entries<Customer>()
+		//	.Where(e => e.State == EntityState.Modified);
+
+		//foreach (var entry in customerEntries)
+		//{
+		//	entry.Property(c => c.Cart).IsModified = true;
+		//}
+
 		return dbContext.SaveChangesAsync(cancellationToken);
 	}
 }

@@ -41,12 +41,10 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 
 		// Act
 		var result = await _customerService.RemoveCartItemAsync(productId, CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
 
 		// Assert
 		result.IsError.Should().BeFalse();
-
-		// Detach to force reload from database
-		_factory.DbContext.ChangeTracker.Clear();
 
 		var customer = await _factory.DbContext.Customers
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
@@ -70,6 +68,7 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		await TestHelper.AddProductToCartAsync(_customerService, existingProductId, quantity);
 
 		// Act - Try to remove a different product that doesn't exist in the cart
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.RemoveCartItemAsync(nonExistentProductId, CancellationToken.None);
 
 		// Assert
@@ -94,7 +93,9 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		await TestHelper.AddProductToCartAsync(_customerService, secondProductId, quantity);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.RemoveCartItemAsync(firstProductId, CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
 
 		// Assert
 		result.IsError.Should().BeFalse();

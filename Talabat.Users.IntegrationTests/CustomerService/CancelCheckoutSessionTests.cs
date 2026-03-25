@@ -53,9 +53,11 @@ public class CancelCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 
 		// Act
 		var result = await _customerService.CancelCheckoutSession(CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
+
 
 		// Assert
-		//result.IsError.Should().BeFalse();
+		result.IsError.Should().BeFalse();
 
 		var customer = await _factory.DbContext.Customers
 			.Include(c => c.ActiveCheckoutSession)
@@ -69,7 +71,6 @@ public class CancelCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 	public async Task CancelCheckoutSession_WithNoActiveSession_ShouldReturnNoActiveCheckoutSessionError()
 	{
 		// Arrange
-		// Use class-level _customerService
 
 		// Act
 		var result = await _customerService.CancelCheckoutSession(CancellationToken.None);

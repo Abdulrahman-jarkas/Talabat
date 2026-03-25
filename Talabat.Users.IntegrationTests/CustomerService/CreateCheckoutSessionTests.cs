@@ -52,7 +52,9 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 		TestHelper.SetupProductsQuery(_factory, new List<Guid> { productId }, productsResponse);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
+		_factory.DbContext.ChangeTracker.Clear();
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -109,6 +111,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 		await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert
@@ -132,6 +135,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 		_factory.SetupProductsQuery(new List<Guid> { productId }, null);
 
 		// Act
+		_factory.DbContext.ChangeTracker.Clear();
 		var result = await _customerService.CreateCheckoutSession(CancellationToken.None);
 
 		// Assert

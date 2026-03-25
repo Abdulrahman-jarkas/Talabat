@@ -10,7 +10,7 @@ internal class Customer : AggregateRoot
 {
 	public string Email { get; private set; } = string.Empty;
 
-	public CartEntity? Cart { get; private set; } = null;
+	public CartEntity? Cart { get; set; } = null;
 
 	private readonly List<CustomerAddress> _addresses = new();
 	public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
@@ -43,7 +43,12 @@ internal class Customer : AggregateRoot
 		if (Cart.MerchantId != productOwner)
 			return CustomerErrors.MerchantMismatch;
 
-		return Cart.SetCartItem(productId, quantity);
+		var result = Cart.SetCartItem(productId, quantity);
+		if (result.IsError)
+			return result.Errors;
+
+		Cart = result.Value;
+		return Result.Updated;
 	}
 
 	public ErrorOr<Updated> RemoveCartItem(Guid productId)
@@ -51,7 +56,12 @@ internal class Customer : AggregateRoot
 		if (Cart is null)
 			return CustomerErrors.CartNotFound;
 
-		return Cart.RemoveCartItem(productId);
+		var result = Cart.RemoveCartItem(productId);
+		if (result.IsError)
+			return result.Errors;
+
+		Cart = result.Value;
+		return Result.Updated;
 	}
 
 	public ErrorOr<Created> CreateCheckoutSession(CheckoutSession checkoutSession)
