@@ -60,8 +60,7 @@ public class CancelCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 		result.IsError.Should().BeFalse();
 
 		var customer = await _factory.DbContext.Customers
-			.Include(c => c.ActiveCheckoutSession)
-				.ThenInclude(cs => cs!.Items)
+			.Include(c => c.CheckoutSessions)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
 		customer!.ActiveCheckoutSession.Should().BeNull();

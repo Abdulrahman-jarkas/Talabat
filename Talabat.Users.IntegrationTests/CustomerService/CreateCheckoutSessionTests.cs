@@ -60,8 +60,8 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 		result.IsError.Should().BeFalse();
 
 		var customer = await _factory.DbContext.Customers
-			.Include(c => c.ActiveCheckoutSession)
-			.ThenInclude(s => s.Items)
+			.Include(c => c.CheckoutSessions)
+				.ThenInclude(s => s.Items)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
 		customer.Should().NotBeNull();
@@ -83,7 +83,7 @@ public class CreateCheckoutSessionTests : IClassFixture<UsersApiFactory>, IAsync
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Be(CartErrors.CartNotFound.Code);
+		result.FirstError.Code.Should().Be(CustomerErrors.CartNotFound.Code);
 	}
 
 	[Fact]

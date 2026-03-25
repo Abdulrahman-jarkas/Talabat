@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 
 namespace Talabat.Users.Data.Configuration;
 
@@ -30,13 +31,19 @@ internal class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 			.HasValueJsonConverter()
 			.IsRequired(false); // Can be null when cart doesn't exist
 
-		// CheckoutSession relationship (One-to-One, configured in CheckoutSessionConfiguration)
-		// Navigation property only, FK is on CheckoutSession side
+		// CheckoutSessions Collection (One-to-Many relationship)
+		builder.HasMany(c => c.CheckoutSessions)
+			.WithOne()
+			.HasForeignKey("CustomerId")
+			.OnDelete(DeleteBehavior.Cascade);
 
 		// Addresses Collection (One-to-Many relationship)
 		builder.HasMany(a => a.Addresses)
 			.WithOne()
 			.HasForeignKey("CustomerId")
 			.OnDelete(DeleteBehavior.Cascade);
+
+		// Ignore ActiveCheckoutSession - it's a computed property
+		builder.Ignore(c => c.ActiveCheckoutSession);
 	}
 }

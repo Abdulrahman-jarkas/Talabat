@@ -1,6 +1,8 @@
 ﻿using Ardalis.GuardClauses;
 using ErrorOr;
 using Talabat.SharedKernal;
+using Talabat.Users.Application.Services;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
 using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using CartEntity = Talabat.Users.Domain.CustomerAggregate.Cart.Cart;
 
@@ -15,7 +17,10 @@ internal class Customer : AggregateRoot
 	private readonly List<CustomerAddress> _addresses = new();
 	public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
 
-	public CheckoutSession? ActiveCheckoutSession { get; private set; } = null;
+	private readonly List<CheckoutSession> _checkoutSessions = new();
+	public IReadOnlyCollection<CheckoutSession> CheckoutSessions => _checkoutSessions.AsReadOnly();
+
+	public CheckoutSession? ActiveCheckoutSession => _checkoutSessions.FirstOrDefault(cs => cs.Status == CheckoutSessionStatus.Active);
 
 	internal Customer(string email, Guid? id = null) : base(id ?? Guid.NewGuid())
 	{
@@ -64,7 +69,7 @@ internal class Customer : AggregateRoot
 		return Result.Updated;
 	}
 
-	public ErrorOr<Created> CreateCheckoutSession(CheckoutSession checkoutSession)
+	public async Task<ErrorOr<Created>> CreateCheckoutSession(IProductService productService, CancellationToken cancellationToken = default)
 	{
 		if (Cart is null || !Cart.Items.Any())
 			return CustomerErrors.CartNotFound;
@@ -72,7 +77,27 @@ internal class Customer : AggregateRoot
 		if (ActiveCheckoutSession is not null)
 			return CustomerErrors.ActiveCheckoutSessionExists;
 
-		ActiveCheckoutSession = checkoutSession;
+		var productIds = Cart.Items.Select(i => i.ProductId).ToList();
+		var productsResult = await productService.GetProductsDetailsAsync(productIds, cancellationToken);
+
+		if (productsResult is null || !productsResult.Any())
+			return CartErrors.NoProductsFoundForCartItems;
+
+		var checkoutItems = new List<CheckoutItem>();
+		foreach (var cartItem in Cart.Items)
+		{
+			var product = productsResult.FirstOrDefault(p => p.Id == cartItem.ProductId);
+			if (product is null)
+				return CartErrors.NoProductFoundForCartItem(cartItem.ProductId);
+
+			checkoutItems.Add(CheckoutItem.Create(
+				cartItem.ProductId,
+				cartItem.Quantity,
+				product.BasePrice));
+		}
+
+		var checkoutSession = CheckoutSession.Create(Cart.MerchantId, checkoutItems);
+		_checkoutSessions.Add(checkoutSession);
 
 		return Result.Created;
 	}
@@ -82,14 +107,15 @@ internal class Customer : AggregateRoot
 		if (ActiveCheckoutSession is null)
 			return CustomerErrors.NoActiveCheckoutSession;
 
-		ActiveCheckoutSession = null;
+		_checkoutSessions.Remove(ActiveCheckoutSession);
 
 		return Result.Success;
 	}
 
 	public void ResetActiveCheckoutSession()
 	{
-		ActiveCheckoutSession = null;
+		if (ActiveCheckoutSession is not null)
+			_checkoutSessions.Remove(ActiveCheckoutSession);
 	}
 
 	public ErrorOr<Success> SetAddressForOrder(Guid addressId)
@@ -105,6 +131,42 @@ internal class Customer : AggregateRoot
 		return Result.Success;
 	}
 
+	public ErrorOr<Success> SetPaymentType(PaymentType paymentType)
+	{
+		if (ActiveCheckoutSession is null)
+			return CustomerErrors.NoActiveCheckoutSession;
+
+		ActiveCheckoutSession.SetPaymentType(paymentType);
+		return Result.Success;
+	}
+
+	public ErrorOr<Success> SetPaymentId(Guid paymentId)
+	{
+		if (ActiveCheckoutSession is null)
+			return CustomerErrors.NoActiveCheckoutSession;
+
+		ActiveCheckoutSession.SetPaymentId(paymentId);
+		return Result.Success;
+	}
+
+	public ErrorOr<Success> SetOrderId(Guid orderId)
+	{
+		if (ActiveCheckoutSession is null)
+			return CustomerErrors.NoActiveCheckoutSession;
+
+		ActiveCheckoutSession.SetOrderId(orderId);
+		return Result.Success;
+	}
+
+	public ErrorOr<Success> CompleteCheckoutSession()
+	{
+		if (ActiveCheckoutSession is null)
+			return CustomerErrors.NoActiveCheckoutSession;
+
+		ActiveCheckoutSession.Complete();
+		return Result.Success;
+	}
+
 	public void AddAddress(string address)
 	{
 		var customerAddress = new CustomerAddress(address);
@@ -114,7 +176,8 @@ internal class Customer : AggregateRoot
 	public void ResetCartAndCheckoutSession()
 	{
 		Cart = null;
-		ActiveCheckoutSession = null;
+		if (ActiveCheckoutSession is not null)
+			_checkoutSessions.Remove(ActiveCheckoutSession);
 	}
 
 	private Customer()

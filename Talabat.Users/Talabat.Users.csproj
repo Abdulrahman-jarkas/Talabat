@@ -28,6 +28,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Talabat.Users.UnitTests" />
 		<InternalsVisibleTo Include="Talabat.Users.IntegrationTests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
 </Project>

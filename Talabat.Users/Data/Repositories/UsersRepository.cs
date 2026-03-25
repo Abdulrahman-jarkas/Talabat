@@ -1,24 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 
 namespace Talabat.Users.Data.Repositories;
 
 internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 {
-	public Task<Customer?> GetCustomerAsync(Guid customerId)
+	public async Task<Customer?> GetCustomerAsync(Guid customerId)
 	{
-		return dbContext.Customers
-			.Include(c => c.ActiveCheckoutSession)
-				.ThenInclude(cs => cs!.Items)
+		return await dbContext.Customers
+			.Include(c => c.CheckoutSessions.Where(cs => cs.Status == CheckoutSessionStatus.Active))
+				.ThenInclude(cs => cs.Items)
 			.FirstOrDefaultAsync(c => c.Id == customerId);
 	}
 
-	public Task<Customer?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken)
+	public async Task<Customer?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken)
 	{
-		return dbContext.Customers
+		return await dbContext.Customers
 			.Include(c => c.Addresses)
-			.Include(c => c.ActiveCheckoutSession)
-				.ThenInclude(cs => cs!.Items)
+			.Include(c => c.CheckoutSessions.Where(cs => cs.Status == CheckoutSessionStatus.Active))
+				.ThenInclude(cs => cs.Items)
 			.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 	}
 
@@ -31,16 +32,6 @@ internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 
 	public Task SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
-		// For JSON columns (like Cart), EF Core might not detect changes automatically
-		// Mark Cart as modified for all tracked Customer entities
-		//var customerEntries = dbContext.ChangeTracker.Entries<Customer>()
-		//	.Where(e => e.State == EntityState.Modified);
-
-		//foreach (var entry in customerEntries)
-		//{
-		//	entry.Property(c => c.Cart).IsModified = true;
-		//}
-
 		return dbContext.SaveChangesAsync(cancellationToken);
 	}
 }

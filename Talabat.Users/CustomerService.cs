@@ -16,20 +16,17 @@ internal class CustomerService : ICustomerService
 	private readonly ISender _sender;
 	private readonly IUsersRepository _usersRepository;
 	private readonly IProductService _productService;
-	private readonly ICheckoutSessionFactory _checkoutSessionFactory;
 
 	public CustomerService(
 		Guid customerId,
 		ISender sender,
 		IUsersRepository usersRepository,
-		IProductService productService,
-		ICheckoutSessionFactory checkoutSessionFactory)
+		IProductService productService)
 	{
 		_customerId = customerId;
 		_sender = sender;
 		_usersRepository = usersRepository;
 		_productService = productService;
-		_checkoutSessionFactory = checkoutSessionFactory;
 	}
 
 	public async Task<ErrorOr<Success>> AddCartItemAsync(Guid productId, int quantity, CancellationToken cancellationToken)
@@ -73,19 +70,7 @@ internal class CustomerService : ICustomerService
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
-		if (customer.Cart is null || !customer.Cart.Items.Any())
-			return CartErrors.CartNotFound;
-
-		var checkoutSessionResult = await _checkoutSessionFactory.CreateCheckoutSessionAsync(
-			customer.Id,
-			customer.Cart,
-			_productService,
-			cancellationToken);
-
-		if (checkoutSessionResult.IsError)
-			return checkoutSessionResult.Errors;
-
-		var createResult = customer.CreateCheckoutSession(checkoutSessionResult.Value);
+		var createResult = await customer.CreateCheckoutSession(_productService, cancellationToken);
 		if (createResult.IsError)
 			return createResult.Errors;
 
@@ -111,7 +96,7 @@ internal class CustomerService : ICustomerService
 		return Result.Success;
 	}
 
-	public async Task<ErrorOr<(Guid PaymentId, string PaymentUrl)>> Checkout(Guid addressId, CancellationToken cancellationToken = default)
+	public async Task<ErrorOr<(Guid PaymentId, string PaymentUrl)>> Checkout(Guid addressId, PaymentType paymentType, CancellationToken cancellationToken = default)
 	{
 		var customer = await _usersRepository.GetCustomerDetailsAsync(_customerId, cancellationToken);
 
@@ -128,6 +113,11 @@ internal class CustomerService : ICustomerService
 
 		if (setAddressResult.IsError)
 			return setAddressResult.Errors;
+
+		var setPaymentTypeResult = customer.SetPaymentType(paymentType);
+
+		if (setPaymentTypeResult.IsError)
+			return setPaymentTypeResult.Errors;
 
 		var productsIds = customer.Cart.Items.Select(i => i.ProductId).ToList();
 		var products = await _sender.Send(new ProductsQuery(productsIds), cancellationToken);

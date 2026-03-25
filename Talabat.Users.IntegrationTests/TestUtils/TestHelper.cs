@@ -20,13 +20,11 @@ internal static class TestHelper
 	{
 		var repository = new UsersRepository(factory.DbContext);
 		var productService = new ProductService(factory.MockMediator);
-		var checkoutSessionFactory = new CheckoutSessionFactory();
 		var service = new Users.CustomerService(
 			Constants.Customer.Id,
 			factory.MockMediator,
 			repository,
-			productService,
-			checkoutSessionFactory);
+			productService);
 		return service;
 	}
 
@@ -72,19 +70,6 @@ internal static class TestHelper
 		List<ProductResponse> products)
 	{
 		factory.SetupProductsQuery(productIds, products);
-	}
-
-	/// <summary>
-	/// Creates a checkout session for the customer with cart items.
-	/// </summary>
-	internal static async Task CreateCheckoutSessionAsync(
-		Users.CustomerService customerService,
-		List<ProductResponse> products,
-		UsersApiFactory factory)
-	{
-		var productIds = products.Select(p => p.Id).ToList();
-		factory.SetupProductsQuery(productIds, products);
-		await customerService.CreateCheckoutSession(CancellationToken.None);
 	}
 
 	/// <summary>

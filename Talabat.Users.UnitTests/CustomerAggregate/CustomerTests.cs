@@ -1,5 +1,9 @@
 using FluentAssertions;
+using NSubstitute;
+using Talabat.Products.Contracts;
+using Talabat.Users.Application.Services;
 using Talabat.Users.Domain.CustomerAggregate;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
 using Talabat.Users.UnitTests.TestConstants;
 using Talabat.Users.UnitTests.TestUtils.Factories;
 
@@ -133,19 +137,28 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void SetCartItem_WithActiveCheckoutSession_ShouldReturnError()
+	public async Task SetCartItem_WithActiveCheckoutSession_ShouldReturnError()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
 
-		var productId = Constants.Product.AlternativeId;
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
+
+		var alternativeProductId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
 
 		// Act
-		var result = customer.SetCartItem(merchantId, productId, quantity);
+		var result = customer.SetCartItem(merchantId, alternativeProductId, quantity);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -199,13 +212,22 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void ResetCart_WithActiveCheckoutSession_ShouldReturnError()
+	public async Task ResetCart_WithActiveCheckoutSession_ShouldReturnError()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
 
 		// Act
 		var result = customer.ResetCart();
@@ -216,32 +238,39 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void CreateCheckoutSession_WithValidCart_ShouldCreateSession()
+	public async Task CreateCheckoutSession_WithValidCart_ShouldCreateSession()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
 
 		// Act
-		var result = customer.CreateCheckoutSession(checkoutSession);
+		var result = await customer.CreateCheckoutSession(productService);
 
 		// Assert
 		result.IsError.Should().BeFalse();
 		customer.ActiveCheckoutSession.Should().NotBeNull();
-		customer.ActiveCheckoutSession.MerchantId.Should().Be(merchantId);
+		customer.ActiveCheckoutSession!.MerchantId.Should().Be(merchantId);
 	}
 
 	[Fact]
-	public void CreateCheckoutSession_WhenCartIsNull_ShouldReturnCartNotFoundError()
+	public async Task CreateCheckoutSession_WhenCartIsNull_ShouldReturnCartNotFoundError()
 	{
 		// Arrange
 		var customer = CustomerFactory.Create();
-		var merchantId = Constants.Merchant.Id;
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
+		var productService = Substitute.For<IProductService>();
 
 		// Act
-		var result = customer.CreateCheckoutSession(checkoutSession);
+		var result = await customer.CreateCheckoutSession(productService);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -249,17 +278,25 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void CreateCheckoutSession_WithActiveSession_ShouldReturnError()
+	public async Task CreateCheckoutSession_WithActiveSession_ShouldReturnError()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
 
 		// Act
-		var secondCheckoutSession = CheckoutSessionFactory.Create(merchantId);
-		var result = customer.CreateCheckoutSession(secondCheckoutSession);
+		var result = await customer.CreateCheckoutSession(productService);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -267,13 +304,22 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void CancelCheckoutSession_WithActiveSession_ShouldCancelSession()
+	public async Task CancelCheckoutSession_WithActiveSession_ShouldCancelSession()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
 
 		// Act
 		var result = customer.CancelCheckoutSession();
@@ -298,7 +344,7 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void SetAddressForOrder_WithValidAddress_ShouldSetAddress()
+	public async Task SetAddressForOrder_WithValidAddress_ShouldSetAddress()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
@@ -306,8 +352,17 @@ public class CustomerTests
 		customer.AddAddress(Constants.Address.DefaultAddress);
 		var addressId = customer.Addresses.First().Id;
 
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
 
 		// Act
 		var result = customer.SetAddressForOrder(addressId);
@@ -333,13 +388,22 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void SetAddressForOrder_WithNonExistentAddress_ShouldReturnAddressNotFoundError()
+	public async Task SetAddressForOrder_WithNonExistentAddress_ShouldReturnAddressNotFoundError()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
 		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var checkoutSession = CheckoutSessionFactory.Create(merchantId);
-		customer.CreateCheckoutSession(checkoutSession);
+		var productId = Constants.Product.Id;
+		var basePrice = Constants.Product.DefaultPrice;
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, basePrice);
+		productService.GetProductsDetailsAsync(
+			Arg.Is<IReadOnlyList<Guid>>(ids => ids.Contains(productId)),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		await customer.CreateCheckoutSession(productService);
 		var nonExistentAddressId = Guid.NewGuid();
 
 		// Act
@@ -348,5 +412,75 @@ public class CustomerTests
 		// Assert
 		result.IsError.Should().BeTrue();
 		result.FirstError.Should().Be(CustomerErrors.AddressNotFound);
+	}
+
+	[Fact]
+	public async Task CreateCheckoutSession_WithMissingProducts_ShouldReturnNoProductsFoundError()
+	{
+		// Arrange
+		var merchantId = Constants.Merchant.Id;
+		var customer = CustomerFactory.CreateWithCart(merchantId);
+
+		var productService = Substitute.For<IProductService>();
+		productService.GetProductsDetailsAsync(
+			Arg.Any<IReadOnlyList<Guid>>(),
+			Arg.Any<CancellationToken>())
+			.Returns((List<ProductResponse>?)null);
+
+		// Act
+		var result = await customer.CreateCheckoutSession(productService);
+
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Code.Should().Be(CartErrors.NoProductsFoundForCartItems.Code);
+	}
+
+	[Fact]
+	public async Task CreateCheckoutSession_WithEmptyProductsList_ShouldReturnNoProductsFoundError()
+	{
+		// Arrange
+		var merchantId = Constants.Merchant.Id;
+		var customer = CustomerFactory.CreateWithCart(merchantId);
+
+		var productService = Substitute.For<IProductService>();
+		productService.GetProductsDetailsAsync(
+			Arg.Any<IReadOnlyList<Guid>>(),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse>());
+
+		// Act
+		var result = await customer.CreateCheckoutSession(productService);
+
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Code.Should().Be(CartErrors.NoProductsFoundForCartItems.Code);
+	}
+
+	[Fact]
+	public async Task CreateCheckoutSession_WithSomeProductsMissing_ShouldReturnNoProductFoundError()
+	{
+		// Arrange
+		var merchantId = Constants.Merchant.Id;
+		var customer = CustomerFactory.CreateWithCart(merchantId);
+		var productId = Constants.Product.Id;
+		var differentProductId = Guid.NewGuid();
+
+		// Add another product to cart
+		customer.SetCartItem(merchantId, differentProductId, 1);
+
+		var productService = Substitute.For<IProductService>();
+		var productResponse = new ProductResponse(productId, "Test Product", merchantId, Constants.Product.DefaultPrice);
+		// Only return one product, missing the second one
+		productService.GetProductsDetailsAsync(
+			Arg.Any<IReadOnlyList<Guid>>(),
+			Arg.Any<CancellationToken>())
+			.Returns(new List<ProductResponse> { productResponse });
+
+		// Act
+		var result = await customer.CreateCheckoutSession(productService);
+
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Code.Should().Be(CartErrors.NoProductFoundForCartItem(differentProductId).Code);
 	}
 }

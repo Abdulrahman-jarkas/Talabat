@@ -68,8 +68,8 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		_factory.DbContext.ChangeTracker.Clear();
 
 		var customer = await _factory.DbContext.Customers
-			.Include(c => c.ActiveCheckoutSession)
-				.ThenInclude(cs => cs!.Items)
+			.Include(c => c.CheckoutSessions)
+				.ThenInclude(cs => cs.Items)
 			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
 
 		var checkoutSession = customer!.ActiveCheckoutSession;
@@ -83,7 +83,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
 
-		var result = await _customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -99,7 +99,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -133,7 +133,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(invalidAddressId, CancellationToken.None);
+		var result = await _customerService.Checkout(invalidAddressId, PaymentType.Online, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -181,7 +181,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(addressId, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();

@@ -29,11 +29,33 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.HasColumnName("AddressId")
 			.IsRequired(false);
 
-		// Relationship with Customer (One-to-One)
+		// PaymentType (required)
+		builder.Property(cs => cs.PaymentType)
+			.HasColumnName("PaymentType")
+			.HasConversion<int>()
+			.IsRequired();
+
+		// Status (required)
+		builder.Property(cs => cs.Status)
+			.HasColumnName("Status")
+			.HasConversion<int>()
+			.IsRequired();
+
+		// PaymentId (nullable)
+		builder.Property(cs => cs.PaymentId)
+			.HasColumnName("PaymentId")
+			.IsRequired(false);
+
+		// OrderId (nullable)
+		builder.Property(cs => cs.OrderId)
+			.HasColumnName("OrderId")
+			.IsRequired(false);
+
+		// Relationship with Customer (One-to-Many)
 		// CustomerId is managed as shadow property by EF Core
 		builder.HasOne<Customer>()
-			.WithOne(c => c.ActiveCheckoutSession)
-			.HasForeignKey<CheckoutSession>("CustomerId")
+			.WithMany()
+			.HasForeignKey("CustomerId")
 			.OnDelete(DeleteBehavior.Cascade);
 
 		// Relationship with CheckoutItems (One-to-Many)
