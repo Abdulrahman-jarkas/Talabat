@@ -82,7 +82,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
 
-		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -98,7 +98,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -132,7 +132,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(invalidAddressId, PaymentType.Online, CancellationToken.None);
+		var result = await _customerService.Checkout(invalidAddressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -180,7 +180,7 @@ public class CheckoutTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.Checkout(addressId, PaymentType.Online, CancellationToken.None);
+		var result = await _customerService.Checkout(addressId, CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();

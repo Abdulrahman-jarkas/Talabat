@@ -1,5 +1,7 @@
 ﻿using Ardalis.GuardClauses;
+using ErrorOr;
 using Talabat.SharedKernal;
+using Talabat.Users.Domain.CustomerAggregate.Cart;
 
 namespace Talabat.Users.Domain.CustomerAggregate.Checkout;
 
@@ -10,7 +12,6 @@ internal class CheckoutSession : Entity
 
 	public Guid MerchantId { get; private set; }
 	public Guid? AddressId { get; private set; } = null;
-	public PaymentType PaymentType { get; private set; }
 	public CheckoutSessionStatus Status { get; private set; }
 	public Guid? PaymentId { get; private set; } = null;
 	public Guid? OrderId { get; private set; } = null;
@@ -27,7 +28,6 @@ internal class CheckoutSession : Entity
 
 		// Set default values
 		Status = CheckoutSessionStatus.Active;
-		PaymentType = PaymentType.Online; // Default to Online
 	}
 
 	public static CheckoutSession Create(Guid merchantId, IEnumerable<CheckoutItem> checkoutItems, Guid? id = null)
@@ -40,14 +40,29 @@ internal class CheckoutSession : Entity
 		AddressId = addressId;
 	}
 
-	public void SetPaymentType(PaymentType paymentType)
-	{
-		PaymentType = paymentType;
-	}
-
 	public void SetPaymentId(Guid paymentId)
 	{
 		PaymentId = paymentId;
+	}
+
+	/// <summary>
+	/// Validates that the current session prices match the latest product prices.
+	/// This ensures price integrity before payment processing.
+	/// </summary>
+	public ErrorOr<Success> ValidatePrices(IEnumerable<(Guid ProductId, decimal CurrentPrice)> currentPrices)
+	{
+		foreach (var item in _items)
+		{
+			var currentPrice = currentPrices.FirstOrDefault(p => p.ProductId == item.ProductId);
+
+			if (currentPrice == default)
+				return CartErrors.NoProductFoundForCartItem(item.ProductId);
+
+			if (currentPrice.CurrentPrice != item.BasePrice)
+				return CheckoutSessionErrors.PriceMismatch;
+		}
+
+		return Result.Success;
 	}
 
 	public void SetOrderId(Guid orderId)

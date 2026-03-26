@@ -31,7 +31,7 @@ internal class CustomerService : ICustomerService
 
 	public async Task<ErrorOr<Success>> AddCartItemAsync(Guid productId, int quantity, CancellationToken cancellationToken)
 	{
-		var customer = await _usersRepository.GetCustomerAsync(_customerId);
+		var customer = await _usersRepository.GetCustomerWithActiveCheckoutAsync(_customerId, cancellationToken);
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
@@ -50,7 +50,7 @@ internal class CustomerService : ICustomerService
 
 	public async Task<ErrorOr<Success>> RemoveCartItemAsync(Guid productId, CancellationToken cancellationToken)
 	{
-		var customer = await _usersRepository.GetCustomerAsync(_customerId);
+		var customer = await _usersRepository.GetCustomerWithActiveCheckoutAsync(_customerId, cancellationToken);
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
@@ -65,7 +65,7 @@ internal class CustomerService : ICustomerService
 
 	public async Task<ErrorOr<Success>> CreateCheckoutSession(CancellationToken cancellationToken = default)
 	{
-		var customer = await _usersRepository.GetCustomerAsync(_customerId);
+		var customer = await _usersRepository.GetCustomerWithActiveCheckoutAsync(_customerId, cancellationToken);
 
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
@@ -81,7 +81,7 @@ internal class CustomerService : ICustomerService
 
 	public async Task<ErrorOr<Success>> CancelCheckoutSession(CancellationToken cancellationToken = default)
 	{
-		var customer = await _usersRepository.GetCustomerAsync(_customerId);
+		var customer = await _usersRepository.GetCustomerWithActiveCheckoutAsync(_customerId, cancellationToken);
 
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
@@ -96,59 +96,58 @@ internal class CustomerService : ICustomerService
 		return Result.Success;
 	}
 
-	public async Task<ErrorOr<(Guid PaymentId, string PaymentUrl)>> Checkout(Guid addressId, PaymentType paymentType, CancellationToken cancellationToken = default)
+	public async Task<ErrorOr<(Guid PaymentId, string PaymentUrl)>> Checkout(Guid addressId, CancellationToken cancellationToken = default)
 	{
-		var customer = await _usersRepository.GetCustomerDetailsAsync(_customerId, cancellationToken);
+		// 1. Load and prepare checkout
+		var prepareResult = await PrepareCheckoutAsync(addressId, cancellationToken);
+		if (prepareResult.IsError)
+			return prepareResult.Errors;
 
-		if (customer is null)
-			return CustomerErrors.CustomerNotFound;
+		var customer = prepareResult.Value;
 
-		if (customer.Cart is null || customer.Cart.Items.Any() == false)
-			return CartErrors.CartNotFound;
-
-		if (customer.ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		var setAddressResult = customer.SetAddressForOrder(addressId);
-
-		if (setAddressResult.IsError)
-			return setAddressResult.Errors;
-
-		var setPaymentTypeResult = customer.SetPaymentType(paymentType);
-
-		if (setPaymentTypeResult.IsError)
-			return setPaymentTypeResult.Errors;
-
-		var productsIds = customer.Cart.Items.Select(i => i.ProductId).ToList();
-		var products = await _sender.Send(new ProductsQuery(productsIds), cancellationToken);
-
-		foreach (var item in customer.ActiveCheckoutSession.Items)
-		{
-			var product = products?.FirstOrDefault(p => p.Id == item.ProductId);
-
-			if (product is null)
-				return CartErrors.NoProductFoundForCartItem(item.ProductId);
-
-			if (product.BasePrice != item.BasePrice)
-				return CheckoutSessionErrors.PriceMismatch;
-		}
-
+		// 2. Create payment session (infrastructure/integration concern)
 		var paymentSession = await _sender.Send(
 			new CreatePaymentSessionRequest(
 				_customerId,
-				customer.ActiveCheckoutSession.Id,
+				customer.ActiveCheckoutSession!.Id,
 				customer.ActiveCheckoutSession.TotalPrice),
 			cancellationToken);
 
 		if (paymentSession.IsError)
 			return paymentSession.Errors;
 
-		var setPaymentIdResult = customer.SetPaymentId(paymentSession.Value.PaymentId);
+		// 3. Store payment reference (domain operation)
+		var setPaymentIdResult = customer.SetPaymentIdForActiveCheckoutSession(paymentSession.Value.PaymentId);
 		if (setPaymentIdResult.IsError)
 			return setPaymentIdResult.Errors;
 
+		// 4. Persist changes (completion happens via PaymentSuccessedEvent)
 		await _usersRepository.SaveChangesAsync(cancellationToken);
 
 		return (paymentSession.Value.PaymentId, paymentSession.Value.PaymentUrl);
+	}
+
+	private async Task<ErrorOr<Customer>> PrepareCheckoutAsync(Guid addressId, CancellationToken cancellationToken)
+	{
+		// 1. Load customer aggregate
+		var customer = await _usersRepository.GetCustomerWithAddressesAsync(_customerId, cancellationToken);
+		if (customer is null)
+			return CustomerErrors.CustomerNotFound;
+
+		// 2. Prepare checkout (domain business logic encapsulated)
+		var prepareResult = customer.PrepareForCheckout(addressId);
+		if (prepareResult.IsError)
+			return prepareResult.Errors;
+
+		// 3. Validate prices with external product service (infrastructure concern)
+		var productIds = customer.Cart!.Items.Select(i => i.ProductId).ToList();
+		var products = await _sender.Send(new ProductsQuery(productIds), cancellationToken);
+
+		var currentPrices = products?.Select(p => (p.Id, p.BasePrice)) ?? Enumerable.Empty<(Guid, decimal)>();
+		var priceValidationResult = customer.ActiveCheckoutSession!.ValidatePrices(currentPrices);
+		if (priceValidationResult.IsError)
+			return priceValidationResult.Errors;
+
+		return customer;
 	}
 }

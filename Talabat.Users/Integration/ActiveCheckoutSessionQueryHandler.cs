@@ -11,7 +11,7 @@ internal class ActiveCheckoutSessionQueryHandler(IUsersRepository usersRepositor
 		ActiveCheckoutSessionQuery request, 
 		CancellationToken cancellationToken)
 	{
-		var customer = await usersRepository.GetCustomerDetailsAsync(
+		var customer = await usersRepository.GetCustomerWithActiveCheckoutAsync(
 			request.CustomerId, 
 			cancellationToken);
 

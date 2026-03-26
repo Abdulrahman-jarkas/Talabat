@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.4.11612.150 stable
+VisualStudioVersion = 18.4.11612.150
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Vender", "Talabat.Vender\Talabat.Vender.csproj", "{8DD06DF2-A5E0-452D-9FDB-B61AE49B6568}"
 EndProject
@@ -46,6 +46,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Users.UnitTests", "Talabat.Users.UnitTests\Talabat.Users.UnitTests.csproj", "{85594AB1-6D90-4F51-B113-618A257A40BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Users.IntegrationTests", "Talabat.Users.IntegrationTests\Talabat.Users.IntegrationTests.csproj", "{6241708A-4DF8-48A1-8646-923CA81AB0BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.OrderProcessing.Contracts", "Talabat.OrderProcessing.Contracts\Talabat.OrderProcessing.Contracts.csproj", "{18D7ECEB-493F-4F4A-82A0-48FC1112681E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -261,6 +263,18 @@ Global
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x64.Build.0 = Release|Any CPU
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x86.ActiveCfg = Release|Any CPU
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x86.Build.0 = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|x64.Build.0 = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Debug|x86.Build.0 = Debug|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|x64.ActiveCfg = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|x64.Build.0 = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|x86.ActiveCfg = Release|Any CPU
+		{18D7ECEB-493F-4F4A-82A0-48FC1112681E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

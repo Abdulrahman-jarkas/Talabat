@@ -9,4 +9,7 @@ internal record CheckoutSessionErrors
 
 	public static Error PriceMismatch =>
 			Error.Conflict("CheckoutSession.PriceMismatch", "The price of items in the checkout session does not match the cart.");
+
+	public static Error NotFound =>
+			Error.NotFound("CheckoutSession.NotFound", "Checkout session does not exist");
 }

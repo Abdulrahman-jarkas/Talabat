@@ -4,6 +4,7 @@ using Talabat.Products.Contracts;
 using Talabat.Users.Application.Services;
 using Talabat.Users.Domain.CustomerAggregate;
 using Talabat.Users.Domain.CustomerAggregate.Cart;
+using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using Talabat.Users.UnitTests.TestConstants;
 using Talabat.Users.UnitTests.TestUtils.Factories;
 
@@ -344,7 +345,7 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public async Task SetAddressForOrder_WithValidAddress_ShouldSetAddress()
+	public async Task PrepareForCheckout_WithValidAddressAndPaymentType_ShouldPrepareCheckout()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
@@ -365,7 +366,7 @@ public class CustomerTests
 		await customer.CreateCheckoutSession(productService);
 
 		// Act
-		var result = customer.SetAddressForOrder(addressId);
+		var result = customer.PrepareForCheckout(addressId);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -373,14 +374,17 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void SetAddressForOrder_WithNoActiveCheckoutSession_ShouldReturnError()
+	public void PrepareForCheckout_WithNoActiveCheckoutSession_ShouldReturnError()
 	{
 		// Arrange
-		var customer = CustomerFactory.CreateWithAddress();
+		var merchantId = Constants.Merchant.Id;
+		var customer = CustomerFactory.CreateWithCart(merchantId);
+		customer.AddAddress(Constants.Address.DefaultAddress);
 		var addressId = customer.Addresses.First().Id;
+		// No checkout session created
 
 		// Act
-		var result = customer.SetAddressForOrder(addressId);
+		var result = customer.PrepareForCheckout(addressId);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -388,7 +392,22 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public async Task SetAddressForOrder_WithNonExistentAddress_ShouldReturnAddressNotFoundError()
+	public void PrepareForCheckout_WithNoCart_ShouldReturnCartNotFoundError()
+	{
+		// Arrange
+		var customer = CustomerFactory.CreateWithAddress();
+		var addressId = customer.Addresses.First().Id;
+
+		// Act
+		var result = customer.PrepareForCheckout(addressId);
+
+		// Assert
+		result.IsError.Should().BeTrue();
+		result.FirstError.Should().Be(CartErrors.CartNotFound);
+	}
+
+	[Fact]
+	public async Task PrepareForCheckout_WithNonExistentAddress_ShouldReturnAddressNotFoundError()
 	{
 		// Arrange
 		var merchantId = Constants.Merchant.Id;
@@ -407,7 +426,7 @@ public class CustomerTests
 		var nonExistentAddressId = Guid.NewGuid();
 
 		// Act
-		var result = customer.SetAddressForOrder(nonExistentAddressId);
+		var result = customer.PrepareForCheckout(nonExistentAddressId);
 
 		// Assert
 		result.IsError.Should().BeTrue();

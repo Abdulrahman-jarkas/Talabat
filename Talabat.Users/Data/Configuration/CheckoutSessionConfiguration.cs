@@ -29,12 +29,6 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.HasColumnName("AddressId")
 			.IsRequired(false);
 
-		// PaymentType (required)
-		builder.Property(cs => cs.PaymentType)
-			.HasColumnName("PaymentType")
-			.HasConversion<int>()
-			.IsRequired();
-
 		// Status (required)
 		builder.Property(cs => cs.Status)
 			.HasColumnName("Status")

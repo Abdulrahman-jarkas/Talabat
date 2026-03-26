@@ -1,23 +1,45 @@
 using MediatR;
-using Talabat.Orders.Domain.OrderAggregate.Events;
+using Talabat.OrderProcessing.Contracts;
 using Talabat.Users.Data.Repositories;
 
 namespace Talabat.Users.Integration;
 
 internal class OnOrderPlacedEventHandler(IUsersRepository usersRepository) 
-	: INotificationHandler<OrderPlacedEvent>
+	: INotificationHandler<OnOrderPlacedEvent>
 {
-	public async Task Handle(OrderPlacedEvent notification, CancellationToken cancellationToken)
+	public async Task Handle(OnOrderPlacedEvent notification, CancellationToken cancellationToken)
 	{
-		var customer = await usersRepository.GetCustomerDetailsAsync(
-			notification.CustomerId, 
+		var customer = await usersRepository.GetCustomerByCheckoutSessionIdAsync(
+			notification.CheckoutSessionId, 
 			cancellationToken);
 
 		if (customer is null)
-			return;
+		{
+			var error = IntegrationErrors.OnOrderPlaced.CustomerNotFound(notification.CheckoutSessionId);
+			throw new InvalidOperationException($"[{error.Code}] {error.Description}");
+		}
 
-		// Reset cart and checkout session
-		customer.ResetCartAndCheckoutSession();
+		// Verify the customer ID matches (security check)
+		if (customer.Id != notification.CustomerId)
+		{
+			var error = IntegrationErrors.OnOrderPlaced.CustomerIdMismatch(
+				expectedCustomerId: customer.Id,
+				actualCustomerId: notification.CustomerId);
+			throw new InvalidOperationException($"[{error.Code}] {error.Description}");
+		}
+
+		// Set the order ID in the checkout session
+		var result = customer.SetOrderIdForCheckoutSession(
+			notification.CheckoutSessionId,
+			notification.OrderId);
+
+		if (result.IsError)
+		{
+			var error = IntegrationErrors.OnOrderPlaced.FailedToSetOrderId(
+				notification.CheckoutSessionId,
+				result.Errors);
+			throw new InvalidOperationException($"[{error.Code}] {error.Description}");
+		}
 
 		await usersRepository.SaveChangesAsync(cancellationToken);
 	}

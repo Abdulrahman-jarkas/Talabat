@@ -8,7 +8,7 @@ internal class CartDetailsQueryHandler(IUsersRepository usersRepository) : IRequ
 {
 	public async Task<CartDetailsResponse?> Handle(CartDetailsQuery request, CancellationToken cancellationToken)
 	{
-		var customer = await usersRepository.GetCustomerAsync(request.userId);
+		var customer = await usersRepository.GetCustomerWithActiveCheckoutAsync(request.userId, cancellationToken);
 		if (customer is null || customer.Cart is null)
 			return null;
 

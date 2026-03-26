@@ -118,29 +118,28 @@ internal class Customer : AggregateRoot
 			_checkoutSessions.Remove(ActiveCheckoutSession);
 	}
 
-	public ErrorOr<Success> SetAddressForOrder(Guid addressId)
+	public ErrorOr<Success> PrepareForCheckout(Guid addressId)
 	{
+		// Business Rule: Must have items in cart
+		if (Cart is null || !Cart.Items.Any())
+			return CartErrors.CartNotFound;
+
+		// Business Rule: Must have active checkout session
 		if (ActiveCheckoutSession is null)
 			return CustomerErrors.NoActiveCheckoutSession;
 
+		// Business Rule: Must use valid address
 		var addressExists = _addresses.Any(a => a.Id == addressId);
 		if (!addressExists)
 			return CustomerErrors.AddressNotFound;
 
+		// Set checkout details
 		ActiveCheckoutSession.SetAddress(addressId);
+
 		return Result.Success;
 	}
 
-	public ErrorOr<Success> SetPaymentType(PaymentType paymentType)
-	{
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		ActiveCheckoutSession.SetPaymentType(paymentType);
-		return Result.Success;
-	}
-
-	public ErrorOr<Success> SetPaymentId(Guid paymentId)
+	public ErrorOr<Success> SetPaymentIdForActiveCheckoutSession(Guid paymentId)
 	{
 		if (ActiveCheckoutSession is null)
 			return CustomerErrors.NoActiveCheckoutSession;
@@ -149,12 +148,14 @@ internal class Customer : AggregateRoot
 		return Result.Success;
 	}
 
-	public ErrorOr<Success> SetOrderId(Guid orderId)
+	public ErrorOr<Success> SetOrderIdForCheckoutSession(Guid checkoutSessionId, Guid orderId)
 	{
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
+		var checkoutSession = _checkoutSessions.FirstOrDefault(cs => cs.Id == checkoutSessionId);
+		if (checkoutSession is null)
+			return CheckoutSessionErrors.NotFound;
 
-		ActiveCheckoutSession.SetOrderId(orderId);
+		checkoutSession.SetOrderId(orderId);
+
 		return Result.Success;
 	}
 

@@ -79,7 +79,7 @@ public class PaymentSuccessedEventHandlerTests : IClassFixture<UsersApiFactory>,
 	}
 
 	[Fact]
-	public async Task Handle_WithNonExistentCustomer_ShouldNotThrowException()
+	public async Task Handle_WithNonExistentCustomer_ShouldThrowInvalidOperationException()
 	{
 		// Arrange
 		var paymentId = Constants.Payment.PaymentId;
@@ -90,11 +90,12 @@ public class PaymentSuccessedEventHandlerTests : IClassFixture<UsersApiFactory>,
 		var act = async () => await _handler.Handle(paymentSuccessedEvent, CancellationToken.None);
 
 		// Assert
-		await act.Should().NotThrowAsync();
+		await act.Should().ThrowAsync<InvalidOperationException>()
+			.WithMessage("*PaymentSuccessed.CustomerNotFound*");
 	}
 
 	[Fact]
-	public async Task Handle_WithNoActiveCheckoutSession_ShouldNotThrowException()
+	public async Task Handle_WithNoActiveCheckoutSession_ShouldThrowInvalidOperationException()
 	{
 		// Arrange
 		var paymentId = Constants.Payment.PaymentId;
@@ -109,17 +110,8 @@ public class PaymentSuccessedEventHandlerTests : IClassFixture<UsersApiFactory>,
 		var act = async () => await _handler.Handle(paymentSuccessedEvent, CancellationToken.None);
 
 		// Assert
-		await act.Should().NotThrowAsync();
-
-		// Verify customer still exists and has no checkout sessions
-		_factory.DbContext.ChangeTracker.Clear();
-
-		var customer = await _factory.DbContext.Customers
-			.Include(c => c.CheckoutSessions)
-			.FirstOrDefaultAsync(c => c.Id == Constants.Customer.Id);
-
-		customer.Should().NotBeNull();
-		customer!.CheckoutSessions.Should().BeEmpty();
+		await act.Should().ThrowAsync<InvalidOperationException>()
+			.WithMessage("*PaymentSuccessed.FailedToSetPaymentId*");
 	}
 
 	[Fact]
