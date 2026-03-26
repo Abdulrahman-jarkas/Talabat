@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
     <ProjectReference Include="..\Talabat.ProductsManagement.Contracts\Talabat.ProductsManagement.Contracts.csproj" />
+    <ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
     <ProjectReference Include="..\Talabat.Taxes.Contracts\Talabat.Taxes.Contracts.csproj" />
     <ProjectReference Include="..\Talabat.Taxes\Talabat.Taxes.csproj" />
   </ItemGroup>

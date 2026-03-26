@@ -13,7 +13,7 @@ public static class OrderMapper
 			Payment = new OrderPaymentDto
 			{
 				PaymentStatus = order.PaymentStatus.ToString(),
-				PaymentMethod = order.PaymentMethod.ToString()
+				//PaymentMethod = order.PaymentMethod.ToString()
 			},
 			Items = order.Items.Select(i => new OrderItemDto
 			{
@@ -22,23 +22,23 @@ public static class OrderMapper
 				Quantity = i.Quantity,
 				Note = i.Note,
 				TotalPrice = i.GetTotalPrice(),
-				Modifiers = i.Modifiers.Select(g => g.ToDto()).ToList()
+				//Modifiers = i.Modifiers.Select(g => g.ToDto()).ToList()
 			}).ToList(),
-			ServiceFees = order.ServiceFees,
+			//ServiceFees = order.ServiceFees,
 			Subtotal = order.Subtotal,
 			Total = order.Total,
 		};
 	}
 
-	public static OrderItemDto.ModifierDto ToDto(this Modifier modifier)
-	{
-		return new OrderItemDto.ModifierDto()
-		{
-			Id = modifier.Id,
-			Name = modifier.Name,
-			Price = modifier.Price,
-			GroupId = modifier.GroupId,
-			GroupName = modifier.GroupTitle
-		};
-	}
+	//public static OrderItemDto.ModifierDto ToDto(this Modifier modifier)
+	//{
+	//	return new OrderItemDto.ModifierDto()
+	//	{
+	//		Id = modifier.Id,
+	//		Name = modifier.Name,
+	//		Price = modifier.Price,
+	//		GroupId = modifier.GroupId,
+	//		GroupName = modifier.GroupTitle
+	//	};
+	//}
 }

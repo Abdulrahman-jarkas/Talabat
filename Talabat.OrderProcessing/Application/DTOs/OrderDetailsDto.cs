@@ -2,11 +2,11 @@
 
 public class OrderDetailsDto
 {
-	public int Id { get; set; }
+	public Guid Id { get; set; }
 
 	public string OrderStatus { get; set; } = string.Empty;
 
-	public decimal ServiceFees { get; set; }
+	//public decimal ServiceFees { get; set; }
 
 	public OrderPaymentDto Payment { get; set; } = default!;
 
@@ -21,7 +21,7 @@ public class OrderDetailsDto
 public class OrderPaymentDto
 {
 	public string PaymentStatus { get; set; } = string.Empty;
-	public string PaymentMethod { get; set; } = string.Empty;
+	//public string PaymentMethod { get; set; } = string.Empty;
 }
 
 public class OrderItemDto
@@ -31,14 +31,14 @@ public class OrderItemDto
 	public int Quantity { get; set; }
 	public string Note { get; set; } = string.Empty;
 	public decimal TotalPrice { get; set; }
-	public List<ModifierDto> Modifiers { get; set; } = new();
+	//public List<ModifierDto> Modifiers { get; set; } = new();
 
-	public class ModifierDto
-	{
-		public int Id { get; set; }
-		public string Name { get; set; } = string.Empty;
-		public decimal Price { get; set; }
-		public Guid GroupId { get; set; }
-		public string GroupName { get; set; } = string.Empty;
-	}
+	//public class ModifierDto
+	//{
+	//	public int Id { get; set; }
+	//	public string Name { get; set; } = string.Empty;
+	//	public decimal Price { get; set; }
+	//	public Guid GroupId { get; set; }
+	//	public string GroupName { get; set; } = string.Empty;
+	//}
 }

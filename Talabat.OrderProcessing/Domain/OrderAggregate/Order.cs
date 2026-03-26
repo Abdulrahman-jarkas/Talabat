@@ -1,28 +1,27 @@
 ﻿using ErrorOr;
-using Talabat.OrderProcessing.Domain.Common;
+using Talabat.SharedKernal;
 
 namespace Talabat.OrderProcessing.Domain.OrderAggregate;
 
 public class Order : AggregateRoot
 {
 	public OrderStatus Status { get; private set; }
-	public PaymentMethodValues PaymentMethod { get; init; }
 	public PaymentStatusValues PaymentStatus { get; private set; }
-	public decimal ServiceFees { get; private set; }
-	public Guid? PaymentId { get; private set; } = null;
+	//public decimal ServiceFees { get; private set; }
+	public Guid PaymentId { get; init; }
 
 	public List<OrderItem> Items { get; private set; } = new();
 
 	public decimal Subtotal => Items.Sum(i => i.GetTotalPrice());
-	public decimal Total => Subtotal + ServiceFees;
+	//public decimal Total => Subtotal + ServiceFees;
+	public decimal Total => Subtotal;
 
 
 
 	public Order(
 		List<OrderItem> items,
-		PaymentMethodValues paymentMethod,
-		decimal serviceFees, 
-		Guid? paymentId = null
+		Guid paymentId
+		//decimal serviceFees
 		)
 	{
 
@@ -32,36 +31,10 @@ public class Order : AggregateRoot
 		Items = items;
 
 		Status = new PlacedOrderStatus();
-		PaymentMethod = paymentMethod;
-		PaymentStatus = paymentMethod == PaymentMethodValues.Cash ?
-			PaymentStatusValues.Unpaid : PaymentStatusValues.Pending;
+		PaymentStatus = PaymentStatusValues.Paid;
 
-		ServiceFees = serviceFees;
+		//ServiceFees = serviceFees;
 		PaymentId = paymentId;
-	}
-
-	public ErrorOr<Success> Accept()
-	{
-		var result = Status.Accept();
-
-		if (result.IsError)
-			return result.Errors;
-
-		Status = result.Value;
-
-		return Result.Success;
-	}
-
-	public ErrorOr<Success> Reject()
-	{
-		var result = Status.Reject();
-
-		if (result.IsError)
-			return result.Errors;
-
-		Status = result.Value;
-
-		return Result.Success;
 	}
 
 	public ErrorOr<Success> Ship()
@@ -78,11 +51,6 @@ public class Order : AggregateRoot
 
 	public ErrorOr<Success> Deliver()
 	{
-		if (PaymentStatus == PaymentStatusValues.Unpaid)
-		{
-			return Error.Conflict("Cannot deliver an unpaid order.");
-		}
-
 		var result = Status.Deliver();
 
 		if (result.IsError)
@@ -106,33 +74,13 @@ public class Order : AggregateRoot
 	}
 
 
-	public ErrorOr<Success> Pay()
+	public ErrorOr<Success> Refund()
 	{
-		if (PaymentStatus == PaymentStatusValues.Paid)
-		{
-			return Error.Conflict("Order is already paid.");
-		}
-
-		if (PaymentMethod == PaymentMethodValues.Cash &&
-			PaymentStatus == PaymentStatusValues.Unpaid &&
-			Status.CurrentStatus == OrderStatusValues.Shipped
-			)
-		{
-			PaymentStatus = PaymentStatusValues.Paid;
-			return Result.Success;
-		}
-
-
-		return Error.Conflict("Invalid operation.");
-	}
-
-	public ErrorOr<Success> Refound()
-	{
-		if ((Status.CurrentStatus != OrderStatusValues.Cancelled ||
-			Status.CurrentStatus != OrderStatusValues.Rejected) &&
+		if (Status.CurrentStatus == OrderStatusValues.Cancelled &&
 			PaymentStatus == PaymentStatusValues.Paid)
 		{
 			PaymentStatus = PaymentStatusValues.Refunded;
+			return Result.Success;
 		}
 
 		return Error.Conflict("Invalid operation.");

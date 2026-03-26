@@ -17,9 +17,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 				v => OrderStatus.FromStatusValue(v))
 			.HasColumnName("Status");
 
-		builder.Property(c => c.PaymentMethod)
-			  .HasColumnName("PaymentMethod");
-
 		builder.Property(c => c.PaymentStatus)
 		  .HasColumnName("PaymentStatus");
 
