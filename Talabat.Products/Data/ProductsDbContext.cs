@@ -23,8 +23,9 @@ public class ProductsDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
         // @TODO: Remove Seed Data After Testing
-        modelBuilder.Entity<Product>().HasData(new Product(merchantId, "Product 1", 40, product1Id));
-        modelBuilder.Entity<Product>().HasData(new Product(merchantId, "Product 2", 80, product2Id));
+        modelBuilder.Entity<Product>().HasData(
+            new Product(merchantId, "Product 1", 40, 100, product1Id),
+            new Product(merchantId, "Product 2", 80, 100, product2Id));
 
         base.OnModelCreating(modelBuilder);
     }

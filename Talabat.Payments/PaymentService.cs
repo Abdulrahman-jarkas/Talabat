@@ -8,7 +8,9 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 {
 	public async Task<ErrorOr<CreatePaymentSessionResponse>> CreatePaymentSession(Guid customerId, Guid checkoutSessionId, decimal amount)
 	{
-		var payment = new Payment(Guid.NewGuid(), "", customerId, checkoutSessionId);
+		var paymentId = Guid.NewGuid();
+		var paymentUrl = $"https://payment-simulator.local/pay/{paymentId}";
+		var payment = new Payment(paymentId, paymentUrl, customerId, checkoutSessionId, amount);
 
 		await paymentsRepository.AddPaymentAsync(payment);
 		await paymentsRepository.SaveChangesAsync();
@@ -35,6 +37,8 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		payment.SetStatus(PaymentStatus.Failed);
 
 		await paymentsRepository.SaveChangesAsync();
+
+		await publisher.Publish(new PaymentFailedEvent(payment.Id, payment.CustomerId, "Payment failed"));
 
 		return Result.Success;
 	}

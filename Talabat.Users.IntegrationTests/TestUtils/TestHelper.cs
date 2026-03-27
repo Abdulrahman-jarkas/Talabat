@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
-using Talabat.Users.Application.Services;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.Domain.CustomerAggregate;
-using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using Talabat.Users.IntegrationTests.Infrastructure;
 using Talabat.Users.IntegrationTests.TestConstants;
 
@@ -19,12 +17,10 @@ internal static class TestHelper
 		UsersApiFactory factory)
 	{
 		var repository = new UsersRepository(factory.DbContext);
-		var productService = new ProductService(factory.MockMediator);
 		var service = new Users.CustomerService(
 			Constants.Customer.Id,
 			factory.MockMediator,
-			repository,
-			productService);
+			repository);
 		return service;
 	}
 
@@ -56,7 +52,9 @@ internal static class TestHelper
 			productId,
 			Constants.Product.Title,
 			merchantId,
-			price);
+			price,
+			100,
+			0);
 
 		factory.SetupProductQuery(productId, productResponse);
 	}

@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Talabat.Users.Application.Services;
 using Talabat.Users.Data;
 using Talabat.Users.Data.Repositories;
-using Talabat.Users.Domain.CustomerAggregate.Checkout;
 
 namespace Talabat.Users;
 
@@ -27,7 +25,6 @@ public static class DependencyInjection
 
 		services.AddScoped<IUsersRepository, UsersRepository>();
 		services.AddScoped<ICustomerService, CustomerService>();
-		services.AddScoped<IProductService, ProductService>();
 
 		return services;
 	}

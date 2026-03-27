@@ -35,42 +35,6 @@ internal class Order : AggregateRoot
         _domainEvents.Add(new OrderPlacedEvent(Id, CustomerId, MerchantId, CheckoutSessionId));
     }
 
-    public ErrorOr<Success> AddItem(Guid productId, int quantity, decimal basePrice)
-    {
-        var item = OrderItem.Create(productId, quantity, basePrice);
-        _items.Add(item);
-
-        return Result.Success;
-    }
-
-    public ErrorOr<Success> Accept()
-    {
-        var result = Status.Accept();
-
-        if (result.IsError)
-            return result.Errors;
-
-        Status = result.Value;
-
-        _domainEvents.Add(new OrderAcceptedEvent(Id, MerchantId, CustomerId));
-
-        return Result.Success;
-    }
-
-    public ErrorOr<Success> Reject()
-    {
-        var result = Status.Reject();
-
-        if (result.IsError)
-            return result.Errors;
-
-        Status = result.Value;
-
-        _domainEvents.Add(new OrderRejectedEvent(Id, MerchantId, CustomerId));
-
-        return Result.Success;
-    }
-
     public ErrorOr<Success> Ship()
     {
         var result = Status.Ship();
@@ -87,9 +51,6 @@ internal class Order : AggregateRoot
 
     public ErrorOr<Success> Deliver()
     {
-        if (Payment.Status == PaymentStatusValues.Unpaid)
-            return OrderErrors.CannotDeliverUnpaidOrder;
-
         var result = Status.Deliver();
 
         if (result.IsError)
@@ -102,7 +63,6 @@ internal class Order : AggregateRoot
         return Result.Success;
     }
 
-    //@TODO: check this business logic, cancel from the user should be after 5 minutes after placing the order if the merchant didn't accept it
     public ErrorOr<Success> Cancel()
     {
         var result = Status.Cancel();
@@ -117,37 +77,26 @@ internal class Order : AggregateRoot
         return Result.Success;
     }
 
-    public ErrorOr<Success> Pay()
+    public ErrorOr<Success> AddItem(Guid productId, int quantity, decimal basePrice)
     {
-        if (Payment.Status == PaymentStatusValues.Paid)
-            return OrderErrors.InvalidPayOperation;
-
-        var paymentRes = Payment.Pay();
-        if (paymentRes.IsError)
-            return paymentRes.Errors;
-
-        _domainEvents.Add(new OrderPaidEvent(Id, MerchantId, CustomerId));
-
+        var item = OrderItem.Create(productId, quantity, basePrice);
+        _items.Add(item);
         return Result.Success;
     }
 
-    //@TODO: check this validation logic
-    public ErrorOr<Success> Refound()
+    public ErrorOr<Success> Refund()
     {
-        if (Status.CurrentStatus != OrderStatusValues.Cancelled &&
-            Payment.Status == PaymentStatusValues.Paid)
-        {
-            var res = Payment.Refund();
+        if (Status.CurrentStatus != OrderStatusValues.Cancelled)
+            return OrderErrors.InvalidRefundOperation;
 
-            if (res.IsError)
-                return res.Errors;
+        var res = Payment.Refund();
 
-            _domainEvents.Add(new OrderRefundedEvent(Id, MerchantId, CustomerId));
+        if (res.IsError)
+            return res.Errors;
 
-            return Result.Success;
-        }
+        _domainEvents.Add(new OrderRefundedEvent(Id, MerchantId, CustomerId));
 
-        return OrderErrors.InvalidRefundOperation;
+        return Result.Success;
     }
 
     // for ef core

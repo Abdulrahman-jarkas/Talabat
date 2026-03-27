@@ -4,18 +4,6 @@ namespace Talabat.Users.Domain.CustomerAggregate;
 
 public record CustomerErrors
 {
-	public static Error UpdateCartWithActiveCheckoutSession =>
-		Error.Failure("Customer.ActiveCheckoutSessionExists", "Cannot modify cart while there is an active checkout session.");
-
-	public static Error ActiveCheckoutSessionExists =>
-		Error.Failure("Customer.ActiveCheckoutSessionExists", "There is already an active checkout session for the customer.");
-
-	public static Error NoActiveCheckoutSession =>
-		Error.Failure("Customer.NoActiveCheckoutSession", "There is no active checkout session for the customer.");
-
-	public static Error AddressNotFound =>
-		Error.NotFound("Customer.AddressNotFound", "The specified address was not found for the customer.");
-
 	public static Error CartNotFound =>
 		Error.NotFound("Customer.CartNotFound", "The cart was not found for the customer.");
 

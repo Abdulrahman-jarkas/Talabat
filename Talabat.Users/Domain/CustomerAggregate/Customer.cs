@@ -1,9 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using ErrorOr;
 using Talabat.SharedKernal;
-using Talabat.Users.Application.Services;
 using Talabat.Users.Domain.CustomerAggregate.Cart;
-using Talabat.Users.Domain.CustomerAggregate.Checkout;
 using CartEntity = Talabat.Users.Domain.CustomerAggregate.Cart.Cart;
 
 namespace Talabat.Users.Domain.CustomerAggregate;
@@ -17,11 +15,6 @@ internal class Customer : AggregateRoot
 	private readonly List<CustomerAddress> _addresses = new();
 	public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
 
-	private readonly List<CheckoutSession> _checkoutSessions = new();
-	public IReadOnlyCollection<CheckoutSession> CheckoutSessions => _checkoutSessions.AsReadOnly();
-
-	public CheckoutSession? ActiveCheckoutSession => _checkoutSessions.FirstOrDefault(cs => cs.Status == CheckoutSessionStatus.Active);
-
 	internal Customer(string email, Guid? id = null) : base(id ?? Guid.NewGuid())
 	{
 		Email = Guard.Against.NullOrEmpty(email, nameof(email));
@@ -29,9 +22,6 @@ internal class Customer : AggregateRoot
 
 	public ErrorOr<Success> ResetCart()
 	{
-		if (ActiveCheckoutSession is not null)
-			return CustomerErrors.UpdateCartWithActiveCheckoutSession;
-
 		Cart = null;
 
 		return Result.Success;
@@ -39,9 +29,6 @@ internal class Customer : AggregateRoot
 
 	public ErrorOr<Updated> SetCartItem(Guid productOwner, Guid productId, int quantity)
 	{
-		if (ActiveCheckoutSession is not null)
-			return CustomerErrors.UpdateCartWithActiveCheckoutSession;
-
 		if (Cart is null)
 			Cart = new CartEntity(productOwner);
 
@@ -69,116 +56,10 @@ internal class Customer : AggregateRoot
 		return Result.Updated;
 	}
 
-	public async Task<ErrorOr<Created>> CreateCheckoutSession(IProductService productService, CancellationToken cancellationToken = default)
-	{
-		if (Cart is null || !Cart.Items.Any())
-			return CustomerErrors.CartNotFound;
-
-		if (ActiveCheckoutSession is not null)
-			return CustomerErrors.ActiveCheckoutSessionExists;
-
-		var productIds = Cart.Items.Select(i => i.ProductId).ToList();
-		var productsResult = await productService.GetProductsDetailsAsync(productIds, cancellationToken);
-
-		if (productsResult is null || !productsResult.Any())
-			return CartErrors.NoProductsFoundForCartItems;
-
-		var checkoutItems = new List<CheckoutItem>();
-		foreach (var cartItem in Cart.Items)
-		{
-			var product = productsResult.FirstOrDefault(p => p.Id == cartItem.ProductId);
-			if (product is null)
-				return CartErrors.NoProductFoundForCartItem(cartItem.ProductId);
-
-			checkoutItems.Add(CheckoutItem.Create(
-				cartItem.ProductId,
-				cartItem.Quantity,
-				product.BasePrice));
-		}
-
-		var checkoutSession = CheckoutSession.Create(Cart.MerchantId, checkoutItems);
-		_checkoutSessions.Add(checkoutSession);
-
-		return Result.Created;
-	}
-
-	public ErrorOr<Success> CancelCheckoutSession()
-	{
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		_checkoutSessions.Remove(ActiveCheckoutSession);
-
-		return Result.Success;
-	}
-
-	public void ResetActiveCheckoutSession()
-	{
-		if (ActiveCheckoutSession is not null)
-			_checkoutSessions.Remove(ActiveCheckoutSession);
-	}
-
-	public ErrorOr<Success> PrepareForCheckout(Guid addressId)
-	{
-		// Business Rule: Must have items in cart
-		if (Cart is null || !Cart.Items.Any())
-			return CartErrors.CartNotFound;
-
-		// Business Rule: Must have active checkout session
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		// Business Rule: Must use valid address
-		var addressExists = _addresses.Any(a => a.Id == addressId);
-		if (!addressExists)
-			return CustomerErrors.AddressNotFound;
-
-		// Set checkout details
-		ActiveCheckoutSession.SetAddress(addressId);
-
-		return Result.Success;
-	}
-
-	public ErrorOr<Success> SetPaymentIdForActiveCheckoutSession(Guid paymentId)
-	{
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		ActiveCheckoutSession.SetPaymentId(paymentId);
-		return Result.Success;
-	}
-
-	public ErrorOr<Success> SetOrderIdForCheckoutSession(Guid checkoutSessionId, Guid orderId)
-	{
-		var checkoutSession = _checkoutSessions.FirstOrDefault(cs => cs.Id == checkoutSessionId);
-		if (checkoutSession is null)
-			return CheckoutSessionErrors.NotFound;
-
-		checkoutSession.SetOrderId(orderId);
-
-		return Result.Success;
-	}
-
-	public ErrorOr<Success> CompleteCheckoutSession()
-	{
-		if (ActiveCheckoutSession is null)
-			return CustomerErrors.NoActiveCheckoutSession;
-
-		ActiveCheckoutSession.Complete();
-		return Result.Success;
-	}
-
 	public void AddAddress(string address)
 	{
 		var customerAddress = new CustomerAddress(address);
 		_addresses.Add(customerAddress);
-	}
-
-	public void ResetCartAndCheckoutSession()
-	{
-		Cart = null;
-		if (ActiveCheckoutSession is not null)
-			_checkoutSessions.Remove(ActiveCheckoutSession);
 	}
 
 	private Customer()

@@ -6,54 +6,34 @@ namespace Talabat.Orders.Domain.OrderAggregate;
 
 internal class Payment : ValueObject
 {
-	public PaymentMethodValues Method { get; init; }
 	public PaymentStatusValues Status { get; private set; }
 
-	public Guid? PaymentId { get; private set; } = null;
+	public Guid PaymentId { get; private set; }
 
 	private Payment(
-		PaymentMethodValues paymentMethod,
-		PaymentStatusValues paymentStatus,
-		Guid? paymentId)
+		Guid paymentId,
+		PaymentStatusValues paymentStatus)
 	{
+		PaymentId = Guard.Against.Default(paymentId, nameof(paymentId));
 		Status = Guard.Against.EnumOutOfRange(paymentStatus);
-		Method = Guard.Against.EnumOutOfRange(paymentMethod);
-		PaymentId = paymentId;
 	}
 
-	public static Payment Card(Guid paymentId, PaymentStatusValues paymentStatus)
+	public static Payment Create(Guid paymentId)
 	{
-		Guard.Against.Default(paymentId, nameof(paymentId));
-		return new Payment(PaymentMethodValues.Card, paymentStatus, paymentId);
+		return new Payment(paymentId, PaymentStatusValues.Paid);
 	}
-
-	public static Payment Cash(PaymentStatusValues paymentStatus)
-	{
-		return new Payment(PaymentMethodValues.Cash, paymentStatus, null);
-	}
-
-	public ErrorOr<Payment> Pay()
-	{
-		if (Status != PaymentStatusValues.Paid)
-			return new Payment(Method, PaymentStatusValues.Paid, PaymentId);
-
-		return Error.Conflict("Payment.Invalid", "This operation is in valid");
-	}
-
 
 	public ErrorOr<Payment> Refund()
 	{
-		if (Status == PaymentStatusValues.Paid && Method == PaymentMethodValues.Card)
-			return new Payment(Method, PaymentStatusValues.Refunded, PaymentId);
+		if (Status == PaymentStatusValues.Paid)
+			return new Payment(PaymentId, PaymentStatusValues.Refunded);
 
-		return Error.Conflict("Payment.Invalid", "This operation is in valid");
+		return Error.Conflict("Payment.Invalid", "Only paid orders can be refunded.");
 	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return Method;
 		yield return Status;
-		if (PaymentId is not null)
-			yield return PaymentId;
+		yield return PaymentId;
 	}
 }

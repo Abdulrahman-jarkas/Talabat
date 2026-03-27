@@ -31,4 +31,10 @@
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
+
+	<ItemGroup>
+	  <Folder Include="Application\Services\" />
+	  <Folder Include="Domain\CustomerAggregate\Checkout\" />
+	</ItemGroup>
+
 </Project>
