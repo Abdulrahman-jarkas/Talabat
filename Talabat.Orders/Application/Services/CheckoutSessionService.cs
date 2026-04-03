@@ -6,6 +6,7 @@ using Talabat.Payments.Contracts;
 using Talabat.Products.Contracts;
 using Talabat.SharedKernal;
 using Talabat.Users.Contracts;
+using CheckoutSessionAggregate = Talabat.Orders.Domain.CheckoutSessionAggregate;
 
 namespace Talabat.Orders.Application.Services;
 
@@ -53,7 +54,7 @@ internal class CheckoutSessionService(
 		}
 
 		// 4. Create checkout session aggregate
-		var checkoutSession = new CheckoutSession(customerId, cartDetails.MerchantId, addressId, checkoutItems);
+		var checkoutSession = new CheckoutSessionAggregate.CheckoutSession(customerId, cartDetails.MerchantId, addressId, checkoutItems);
 
 		// 5. Reserve products + save session in a single transaction
 		foreach (var item in checkoutItems)

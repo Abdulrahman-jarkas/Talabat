@@ -7,13 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Talabat.Orders\Talabat.Orders.csproj" />
 		<ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />
-		<ProjectReference Include="..\Talabat.ProductsManagement.Contracts\Talabat.ProductsManagement.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
 		<ProjectReference Include="..\Talabat.Users.Contracts\Talabat.Users.Contracts.csproj" />
-		<ProjectReference Include="..\Talabat.OrderProcessing.Contracts\Talabat.OrderProcessing.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

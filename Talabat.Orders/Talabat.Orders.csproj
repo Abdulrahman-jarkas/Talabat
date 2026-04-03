@@ -7,7 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Talabat.Checkout.Contracts\Talabat.Checkout.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Orders.Contracts\Talabat.Orders.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />

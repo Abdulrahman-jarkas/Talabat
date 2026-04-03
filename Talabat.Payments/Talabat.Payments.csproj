@@ -17,4 +17,8 @@
 	  <ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Integrations\" />
+	</ItemGroup>
+
 </Project>
