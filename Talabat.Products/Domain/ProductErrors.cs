@@ -9,8 +9,8 @@ internal static class ProductErrors
 			"Product.NotFound",
 			$"Product '{productId}' was not found.");
 
-	public static Error InsufficientStock(Guid productId) =>
+	public static Error HasPaidReservations(Guid productId) =>
 		Error.Conflict(
-			"Product.InsufficientStock",
-			$"Insufficient stock for product '{productId}'.");
+			"Product.HasPaidReservations",
+			$"Product '{productId}' cannot be deleted because it has paid reservations.");
 }

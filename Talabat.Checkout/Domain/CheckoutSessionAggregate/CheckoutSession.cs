@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using ErrorOr;
-using Talabat.Checkout.Application.Services;
 using Talabat.Checkout.Domain.CheckoutSessionAggregate.Events;
+using Talabat.Checkout.Domain.ProductAggregate;
 using Talabat.SharedKernal;
 
 namespace Talabat.Checkout.Domain.CheckoutSessionAggregate;
@@ -16,7 +16,6 @@ internal class CheckoutSession : AggregateRoot
 	public Guid AddressId { get; private set; }
 	public CheckoutSessionLifetime Lifetime { get; private set; }
 	public Guid? PaymentId { get; private set; }
-	public Guid? OrderId { get; private set; }
 
 	public decimal TotalPrice => _items.Sum(i => i.Price * i.Quantity);
 
@@ -37,34 +36,39 @@ internal class CheckoutSession : AggregateRoot
 
 		Lifetime = CheckoutSessionLifetime.Create();
 		PaymentId = null;
-		OrderId = null;
 
 		_domainEvents.Add(new CheckoutSessionCreatedEvent(Id, CustomerId));
 	}
 
-	public ErrorOr<Success> Complete(Guid paymentId, Guid orderId)
+	public ErrorOr<Success> InitiatePayment(Guid paymentId)
 	{
 		if (!Lifetime.IsActive)
 			return CheckoutSessionErrors.NotActive;
 
-		Guard.Against.Default(paymentId, nameof(paymentId));
-		Guard.Against.Default(orderId, nameof(orderId));
+		PaymentId = Guard.Against.Default(paymentId, nameof(paymentId));
+		return Result.Success;
+	}
 
-		PaymentId = paymentId;
-		OrderId = orderId;
-		Lifetime.Complete();
+	public ErrorOr<Success> Complete()
+	{
+		var lifetimeResult = Lifetime.Complete();
+		if (lifetimeResult.IsError)
+			return lifetimeResult.Errors;
 
-		_domainEvents.Add(new CheckoutSessionCompletedEvent(Id, CustomerId, paymentId, orderId));
+		Lifetime = lifetimeResult.Value;
+
+		_domainEvents.Add(new CheckoutSessionCompletedEvent(Id, CustomerId, PaymentId!.Value));
 
 		return Result.Success;
 	}
 
 	public ErrorOr<Success> Cancel()
 	{
-		if (!Lifetime.IsActive)
-			return CheckoutSessionErrors.NotActive;
+		var lifetimeResult = Lifetime.Cancel();
+		if (lifetimeResult.IsError)
+			return lifetimeResult.Errors;
 
-		Lifetime.Cancel();
+		Lifetime = lifetimeResult.Value;
 
 		_domainEvents.Add(new CheckoutSessionCancelledEvent(Id, CustomerId));
 
@@ -73,50 +77,27 @@ internal class CheckoutSession : AggregateRoot
 
 	public ErrorOr<Success> Expire()
 	{
-		if (Lifetime.StoredStatus != CheckoutSessionStatusValues.Active)
-			return CheckoutSessionErrors.NotActive;
+		var lifetimeResult = Lifetime.MarkExpired();
+		if (lifetimeResult.IsError)
+			return lifetimeResult.Errors;
 
-		Lifetime.MarkExpired();
+		Lifetime = lifetimeResult.Value;
 
 		_domainEvents.Add(new CheckoutSessionExpiredEvent(Id, CustomerId));
 
 		return Result.Success;
 	}
 
-	/// <summary>
-	/// Checks if the session has exceeded its lifetime and transitions to Expired if so.
-	/// Returns true if the session was expired by this call.
-	/// </summary>
-	public bool TryExpireIfLifetimeExceeded()
-	{
-		if (Lifetime.StoredStatus != CheckoutSessionStatusValues.Active)
-			return false;
-
-		if (DateTime.UtcNow < Lifetime.ExpiresAt)
-			return false;
-
-		Lifetime.MarkExpired();
-		_domainEvents.Add(new CheckoutSessionExpiredEvent(Id, CustomerId));
-		return true;
-	}
-
-	public async Task<ErrorOr<Success>> Validate(IProductService productService, CancellationToken cancellationToken = default)
+	public ErrorOr<Success> Validate(IReadOnlyList<Product> checkoutProducts)
 	{
 		if (!Lifetime.IsActive)
 			return CheckoutSessionErrors.SessionExpired;
 
-		var productIds = _items.Select(i => i.ProductId).ToList();
-
-		var products = await productService.GetProductsForValidationAsync(productIds, cancellationToken);
-
-		if (products is null || products.Count == 0)
-			return CheckoutSessionErrors.ProductNotFound(productIds.First());
-
 		foreach (var item in _items)
 		{
-			var product = products.FirstOrDefault(p => p.ProductId == item.ProductId);
+			var product = checkoutProducts.FirstOrDefault(p => p.Id == item.ProductId);
 
-			if (product is null)
+			if (product is null || product.IsDeleted)
 				return CheckoutSessionErrors.ProductNotFound(item.ProductId);
 
 			if (product.BasePrice != item.Price)

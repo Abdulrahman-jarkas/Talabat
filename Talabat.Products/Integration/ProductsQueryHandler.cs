@@ -19,8 +19,7 @@ internal class ProductsQueryHandler(IProductsRepository productsRepository) : IR
 				p.Title,
 				p.MerchantId,
 				p.BasePrice,
-				p.Stock.AvailableStock,
-				p.Stock.ReservedStock))
+				p.Stock.Quantity))
 			.ToList();
 	}
 }

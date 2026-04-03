@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Talabat.Checkout.Application.BackgroundServices;
 using Talabat.Checkout.Application.Services;
 using Talabat.Checkout.Data;
 using Talabat.Checkout.Data.Repositories;
@@ -14,6 +15,8 @@ public static class DependencyInjection
 		services.AddPersistence(configuration)
 			.AddMediatR();
 
+		services.AddHostedService<CheckoutSessionExpirationService>();
+
 		return services;
 	}
 
@@ -25,6 +28,7 @@ public static class DependencyInjection
 		});
 
 		services.AddScoped<ICheckoutSessionRepository, CheckoutSessionRepository>();
+		services.AddScoped<IProductRepository, ProductRepository>();
 		services.AddScoped<ICheckoutSessionService, CheckoutSessionService>();
 		services.AddScoped<IProductService, ProductService>();
 

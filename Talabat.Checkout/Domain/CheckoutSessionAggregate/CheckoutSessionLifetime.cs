@@ -1,3 +1,4 @@
+using ErrorOr;
 using Talabat.SharedKernal;
 
 namespace Talabat.Checkout.Domain.CheckoutSessionAggregate;
@@ -10,15 +11,11 @@ internal class CheckoutSessionLifetime : ValueObject
 
 	public static readonly TimeSpan MaxDuration = TimeSpan.FromMinutes(2);
 
-	/// <summary>
-	/// Computed status that considers time-based expiration.
-	/// If the stored status is Active but the current time exceeds ExpiresAt,
-	/// the session is effectively Expired — no background service needed.
-	/// </summary>
-	public CheckoutSessionStatusValues Status =>
-		StoredStatus == CheckoutSessionStatusValues.Active && DateTime.UtcNow >= ExpiresAt
-			? CheckoutSessionStatusValues.Expired
-			: StoredStatus;
+	private bool IsLifetimeExceeded => StoredStatus == CheckoutSessionStatusValues.Active && DateTime.UtcNow >= ExpiresAt;
+
+	public CheckoutSessionStatusValues Status => IsLifetimeExceeded
+		? CheckoutSessionStatusValues.Expired
+		: StoredStatus;
 
 	public bool IsActive => Status == CheckoutSessionStatusValues.Active;
 	public bool IsExpired => Status == CheckoutSessionStatusValues.Expired;
@@ -36,9 +33,29 @@ internal class CheckoutSessionLifetime : ValueObject
 		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Active, now, now.Add(MaxDuration));
 	}
 
-	public void Complete() => StoredStatus = CheckoutSessionStatusValues.Completed;
-	public void Cancel() => StoredStatus = CheckoutSessionStatusValues.Cancelled;
-	public void MarkExpired() => StoredStatus = CheckoutSessionStatusValues.Expired;
+	public ErrorOr<CheckoutSessionLifetime> Complete()
+	{
+		if (!IsActive)
+			return CheckoutSessionErrors.NotActive;
+
+		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Completed, CreatedAt, ExpiresAt);
+	}
+
+	public ErrorOr<CheckoutSessionLifetime> Cancel()
+	{
+		if (!IsActive)
+			return CheckoutSessionErrors.NotActive;
+
+		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Cancelled, CreatedAt, ExpiresAt);
+	}
+
+	public ErrorOr<CheckoutSessionLifetime> MarkExpired()
+	{
+		if (StoredStatus != CheckoutSessionStatusValues.Active)
+			return CheckoutSessionErrors.NotActive;
+
+		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Expired, CreatedAt, ExpiresAt);
+	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{

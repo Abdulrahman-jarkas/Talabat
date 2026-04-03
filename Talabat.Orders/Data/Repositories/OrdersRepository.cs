@@ -18,6 +18,12 @@ internal class OrdersRepository(OrdersDbContext context) : IOrdersRepository
 			.FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 	}
 
+	public Task<Order?> GetByCheckoutSessionIdAsync(Guid checkoutSessionId, CancellationToken cancellationToken = default)
+	{
+		return context.Orders
+			.FirstOrDefaultAsync(o => o.CheckoutSessionId == checkoutSessionId, cancellationToken);
+	}
+
 	public Task SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
 		return context.SaveChangesAsync(cancellationToken);

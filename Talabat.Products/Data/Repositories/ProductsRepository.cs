@@ -7,7 +7,7 @@ internal class ProductsRepository(ProductsDbContext context) : IProductsReposito
 {
 	public async Task<Product?> GetProductByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
-		return await context.Products.FindAsync(id, cancellationToken);
+		return await context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 	}
 
 	public Task<List<Product>> GetProductsByIdsAsync(IReadOnlyList<Guid> productIds, CancellationToken cancellationToken = default)

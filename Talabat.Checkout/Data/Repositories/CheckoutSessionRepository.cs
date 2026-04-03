@@ -17,6 +17,13 @@ internal class CheckoutSessionRepository(CheckoutDbContext context) : ICheckoutS
 			.FirstOrDefaultAsync(cs => cs.Id == checkoutSessionId, cancellationToken);
 	}
 
+	public Task<CheckoutSession?> GetByPaymentIdAsync(Guid paymentId, CancellationToken cancellationToken = default)
+	{
+		return context.CheckoutSessions
+			.Include(cs => cs.Items)
+			.FirstOrDefaultAsync(cs => cs.PaymentId == paymentId, cancellationToken);
+	}
+
 	public Task<CheckoutSession?> GetActiveByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
 	{
 		return context.CheckoutSessions
@@ -31,6 +38,15 @@ internal class CheckoutSessionRepository(CheckoutDbContext context) : ICheckoutS
 			.Include(cs => cs.Items)
 			.Where(cs => cs.Lifetime.StoredStatus == CheckoutSessionStatusValues.Active
 				&& cs.Items.Any(i => i.ProductId == productId))
+			.ToListAsync(cancellationToken);
+	}
+
+	public Task<List<CheckoutSession>> GetOverdueActiveSessionsAsync(CancellationToken cancellationToken = default)
+	{
+		return context.CheckoutSessions
+			.Include(cs => cs.Items)
+			.Where(cs => cs.Lifetime.StoredStatus == CheckoutSessionStatusValues.Active
+				&& cs.Lifetime.ExpiresAt <= DateTime.UtcNow)
 			.ToListAsync(cancellationToken);
 	}
 

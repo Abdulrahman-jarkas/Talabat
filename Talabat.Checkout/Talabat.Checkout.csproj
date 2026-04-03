@@ -8,7 +8,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Talabat.Checkout.Contracts\Talabat.Checkout.Contracts.csproj" />
-        <ProjectReference Include="..\Talabat.Orders.Contracts\Talabat.Orders.Contracts.csproj" />
         <ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
         <ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />
         <ProjectReference Include="..\Talabat.ProductsManagement.Contracts\Talabat.ProductsManagement.Contracts.csproj" />
@@ -20,6 +19,7 @@
         <PackageReference Include="Ardalis.GuardClauses" Version="5.0.0" />
         <PackageReference Include="ErrorOr" Version="2.0.1" />
         <PackageReference Include="MediatR" Version="13.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     </ItemGroup>
 

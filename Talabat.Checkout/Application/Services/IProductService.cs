@@ -1,27 +1,10 @@
-using ErrorOr;
-
 namespace Talabat.Checkout.Application.Services;
 
-internal record ProductValidationInfo(Guid ProductId, decimal BasePrice, int AvailableStock, int ReservedStock)
-{
-	public int EffectiveStock => AvailableStock - ReservedStock;
-}
+internal record ProductDetails(Guid ProductId, decimal BasePrice, int Quantity);
 
 internal interface IProductService
 {
-	Task<List<ProductValidationInfo>?> GetProductsForValidationAsync(
+	Task<List<ProductDetails>?> GetProductDetailsAsync(
 		IReadOnlyList<Guid> productIds,
-		CancellationToken cancellationToken = default);
-
-	Task<ErrorOr<Success>> ReserveStockAsync(
-		List<(Guid ProductId, int Quantity)> items,
-		CancellationToken cancellationToken = default);
-
-	Task<ErrorOr<Success>> ReleaseStockAsync(
-		List<(Guid ProductId, int Quantity)> items,
-		CancellationToken cancellationToken = default);
-
-	Task<ErrorOr<Success>> DeductStockAsync(
-		List<(Guid ProductId, int Quantity)> items,
 		CancellationToken cancellationToken = default);
 }

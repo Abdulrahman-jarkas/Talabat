@@ -53,8 +53,7 @@ internal static class TestHelper
 			Constants.Product.Title,
 			merchantId,
 			price,
-			100,
-			0);
+			100);
 
 		factory.SetupProductQuery(productId, productResponse);
 	}

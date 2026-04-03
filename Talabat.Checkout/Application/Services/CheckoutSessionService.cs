@@ -11,37 +11,27 @@ internal class CheckoutSessionService : ICheckoutSessionService
 {
 	private readonly ISender _sender;
 	private readonly ICheckoutSessionRepository _checkoutSessionRepository;
+	private readonly IProductRepository _productRepository;
 	private readonly IProductService _productService;
 
 	public CheckoutSessionService(
 		ISender sender,
 		ICheckoutSessionRepository checkoutSessionRepository,
+		IProductRepository productRepository,
 		IProductService productService)
 	{
 		_sender = sender;
 		_checkoutSessionRepository = checkoutSessionRepository;
+		_productRepository = productRepository;
 		_productService = productService;
 	}
 
 	public async Task<ErrorOr<Success>> CreateAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken = default)
 	{
-		// 0. Check and expire any existing active session for this customer
+		// 0. Check for any existing active session for this customer
 		var existingSession = await _checkoutSessionRepository.GetActiveByCustomerIdAsync(customerId, cancellationToken);
-		if (existingSession is not null)
-		{
-			if (existingSession.TryExpireIfLifetimeExceeded())
-			{
-				// Release reserved stock for the expired session
-				var stockItems = existingSession.Items
-					.Select(i => (i.ProductId, i.Quantity)).ToList();
-				await _productService.ReleaseStockAsync(stockItems, cancellationToken);
-				await _checkoutSessionRepository.SaveChangesAsync(cancellationToken);
-			}
-			else
-			{
-				return CheckoutSessionErrors.ActiveSessionAlreadyExists;
-			}
-		}
+		if (existingSession is not null && existingSession.Lifetime.IsActive)
+			return CheckoutSessionErrors.ActiveSessionAlreadyExists;
 
 		// 1. Get cart details from Users context
 		var cartDetails = await _sender.Send(new CartDetailsQuery(customerId), cancellationToken);
@@ -49,35 +39,57 @@ internal class CheckoutSessionService : ICheckoutSessionService
 		if (cartDetails is null || cartDetails.CartItems.Count == 0)
 			return CheckoutSessionErrors.CartEmpty;
 
-		// 2. Get product details to populate prices and validate stock
+		// 2. Get latest product details from Products module
 		var productIds = cartDetails.CartItems.Select(ci => ci.productId).ToList();
-		var products = await _productService.GetProductsForValidationAsync(productIds, cancellationToken);
+		var productDetails = await _productService.GetProductDetailsAsync(productIds, cancellationToken);
 
-		if (products is null || products.Count == 0)
+		if (productDetails is null || productDetails.Count == 0)
 			return CheckoutSessionErrors.ProductsNotFound;
 
-		// 3. Build checkout items from cart + product data, validate availability
+		// 3. Sync Checkout Products (create or update local projections)
+		var checkoutProducts = await _productRepository.GetByIdsAsync(productIds, cancellationToken);
+
+		foreach (var detail in productDetails)
+		{
+			var checkoutProduct = checkoutProducts.FirstOrDefault(p => p.Id == detail.ProductId);
+			if (checkoutProduct is null)
+			{
+				checkoutProduct = new Domain.ProductAggregate.Product(detail.ProductId, detail.Quantity, detail.BasePrice);
+				await _productRepository.AddAsync(checkoutProduct, cancellationToken);
+				checkoutProducts.Add(checkoutProduct);
+			}
+			else
+				{
+					var quantityResult = checkoutProduct.UpdateQuantity(detail.Quantity);
+					if (quantityResult.IsError)
+						return quantityResult.Errors;
+
+					var priceResult = checkoutProduct.UpdatePrice(detail.BasePrice);
+					if (priceResult.IsError)
+						return priceResult.Errors;
+				}
+		}
+
+		// 4. Build checkout items, validate availability, and reserve on Checkout Products
 		var checkoutItems = new List<CheckoutItem>();
 		foreach (var cartItem in cartDetails.CartItems)
 		{
-			var product = products.FirstOrDefault(p => p.ProductId == cartItem.productId);
+			var product = checkoutProducts.FirstOrDefault(p => p.Id == cartItem.productId);
 			if (product is null)
 				return CheckoutSessionErrors.ProductNotFound(cartItem.productId);
 
-			if (product.EffectiveStock < cartItem.quantity)
+			if (product.AvailableQuantity < cartItem.quantity)
 				return CheckoutSessionErrors.InsufficientStock(cartItem.productId);
+
+			var reserveResult = product.Reserve(cartItem.quantity);
+			if (reserveResult.IsError)
+				return reserveResult.Errors;
 
 			checkoutItems.Add(CheckoutItem.Create(
 				cartItem.productId,
 				product.BasePrice,
 				cartItem.quantity));
 		}
-
-		// 4. Reserve stock in the Products context
-		var reserveItems = checkoutItems.Select(i => (i.ProductId, i.Quantity)).ToList();
-		var reserveResult = await _productService.ReserveStockAsync(reserveItems, cancellationToken);
-		if (reserveResult.IsError)
-			return reserveResult.Errors;
 
 		// 5. Create checkout session aggregate
 		var checkoutSession = new CheckoutSession(customerId, cartDetails.MerchantId, addressId, checkoutItems);
@@ -98,21 +110,18 @@ internal class CheckoutSessionService : ICheckoutSessionService
 		if (checkoutSession is null)
 			return CheckoutSessionErrors.NotFound;
 
-		// 2. Check for auto-expiration
-		if (checkoutSession.TryExpireIfLifetimeExceeded())
-		{
-			var stockItems = checkoutSession.Items
-				.Select(i => (i.ProductId, i.Quantity)).ToList();
-			await _productService.ReleaseStockAsync(stockItems, cancellationToken);
-			await _checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+		// 2. Check if session is still active
+		if (checkoutSession.Lifetime.IsExpired)
 			return CheckoutSessionErrors.SessionExpired;
-		}
 
-		var validationResult = await checkoutSession.Validate(_productService, cancellationToken);
+		// 3. Validate prices against Checkout's local Products
+		var productIds = checkoutSession.Items.Select(i => i.ProductId).ToList();
+		var checkoutProducts = await _productRepository.GetByIdsAsync(productIds, cancellationToken);
+		var validationResult = checkoutSession.Validate(checkoutProducts);
 		if (validationResult.IsError)
 			return validationResult.Errors;
 
-		// 3. Create payment session
+		// 4. Create payment session
 		var paymentSession = await _sender.Send(
 			new CreatePaymentSessionRequest(
 				checkoutSession.CustomerId,
@@ -123,6 +132,8 @@ internal class CheckoutSessionService : ICheckoutSessionService
 		if (paymentSession.IsError)
 			return paymentSession.Errors;
 
+		// 5. Record the PaymentId on the session so payment success handlers can look it up
+		checkoutSession.InitiatePayment(paymentSession.Value.PaymentId);
 		await _checkoutSessionRepository.SaveChangesAsync(cancellationToken);
 
 		return (paymentSession.Value.PaymentId, paymentSession.Value.PaymentUrl);

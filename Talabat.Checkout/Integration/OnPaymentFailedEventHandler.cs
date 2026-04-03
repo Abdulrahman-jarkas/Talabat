@@ -1,43 +1,63 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Talabat.Checkout.Data.Repositories;
+using Talabat.Checkout.Domain.CheckoutSessionAggregate;
 using Talabat.Payments.Contracts;
-using Talabat.Products.Contracts;
 
 namespace Talabat.Checkout.Integration;
 
 internal class OnPaymentFailedEventHandler(
 	ICheckoutSessionRepository checkoutSessionRepository,
-	ISender sender) : INotificationHandler<PaymentFailedEvent>
+	ILogger<OnPaymentFailedEventHandler> logger) : INotificationHandler<PaymentFailedEvent>
 {
 	public async Task Handle(PaymentFailedEvent notification, CancellationToken cancellationToken)
 	{
-		var checkoutSession = await checkoutSessionRepository.GetActiveByCustomerIdAsync(
-			notification.CustomerId,
-			cancellationToken);
-
-		if (checkoutSession is null)
+		try
 		{
-			var error = IntegrationErrors.PaymentFailed.CheckoutSessionNotFound(notification.CustomerId);
-			throw new InvalidOperationException($"[{error.Code}] {error.Description}");
+			var checkoutSession = await checkoutSessionRepository.GetByPaymentIdAsync(
+				notification.PaymentId,
+				cancellationToken);
+
+			if (checkoutSession is null)
+			{
+				logger.LogError(
+					"[PaymentFailed] No checkout session found for PaymentId {PaymentId}.",
+					notification.PaymentId);
+				return;
+			}
+
+			// Idempotency: already cancelled, nothing to do
+			if (checkoutSession.Lifetime.StoredStatus == CheckoutSessionStatusValues.Cancelled)
+				return;
+
+			var cancelResult = checkoutSession.Cancel();
+
+			if (cancelResult.IsError)
+			{
+				logger.LogError(
+					"[PaymentFailed] Failed to cancel session {SessionId} for PaymentId {PaymentId}. Errors: {Errors}",
+					checkoutSession.Id,
+					notification.PaymentId,
+					string.Join(", ", cancelResult.Errors.Select(e => e.Description)));
+				return;
+			}
+
+			// Cancel() raises CheckoutSessionCancelledEvent, which is dispatched during SaveChangesAsync.
+			// OnCheckoutSessionCancelledEventHandler then releases reservations within the same transaction.
+			await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
 		}
-
-		var cancelResult = checkoutSession.Cancel();
-
-		if (cancelResult.IsError)
+		catch (DbUpdateConcurrencyException)
 		{
-			var error = IntegrationErrors.PaymentFailed.FailedToCancel(
-				checkoutSession.Id,
-				cancelResult.Errors);
-			throw new InvalidOperationException($"[{error.Code}] {error.Description}");
+			logger.LogInformation(
+				"[PaymentFailed] Session was modified concurrently for PaymentId {PaymentId}; skipping.",
+				notification.PaymentId);
 		}
-
-		// Release reserved stock
-		var releaseItems = checkoutSession.Items
-			.Select(i => new ReleaseStockItem(i.ProductId, i.Quantity))
-			.ToList();
-
-		await sender.Send(new ReleaseStockRequest(releaseItems), cancellationToken);
-
-		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+		catch (Exception ex)
+		{
+			logger.LogError(ex,
+				"[PaymentFailed] Unexpected error handling PaymentId {PaymentId}.",
+				notification.PaymentId);
+		}
 	}
 }

@@ -5,6 +5,5 @@ public record ProductResponse(
 	string Title,
 	Guid Merchant,
 	decimal BasePrice,
-	int AvailableStock,
-	int ReservedStock
+	int Quantity
 );

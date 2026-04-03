@@ -3,5 +3,5 @@ using MediatR;
 
 namespace Talabat.Products.Contracts;
 
-public record DeductStockItem(Guid ProductId, int Quantity);
-public record DeductStockRequest(List<DeductStockItem> Items) : IRequest<ErrorOr<Success>>;
+public record ConfirmShipmentItem(Guid ProductId, Guid OrderId);
+public record ConfirmShipmentRequest(List<ConfirmShipmentItem> Items) : IRequest<ErrorOr<Success>>;

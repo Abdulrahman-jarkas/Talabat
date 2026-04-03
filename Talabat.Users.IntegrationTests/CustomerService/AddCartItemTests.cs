@@ -39,8 +39,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 			Constants.Product.Title,
 			merchantId,
 			Constants.Product.BasePrice,
-			100,
-			0);
+			100);
 
 		_factory.SetupProductQuery(productId, productResponse);
 

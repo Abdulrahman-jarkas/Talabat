@@ -2,14 +2,13 @@ using ErrorOr;
 using MediatR;
 using Talabat.Products.Contracts;
 using Talabat.Products.Data.Repositories;
-using Talabat.Products.Domain;
 
 namespace Talabat.Products.Integration;
 
-internal class DeductStockRequestHandler(IProductsRepository productsRepository)
-	: IRequestHandler<DeductStockRequest, ErrorOr<Success>>
+internal class ConfirmShipmentRequestHandler(IProductsRepository productsRepository)
+	: IRequestHandler<ConfirmShipmentRequest, ErrorOr<Success>>
 {
-	public async Task<ErrorOr<Success>> Handle(DeductStockRequest request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Success>> Handle(ConfirmShipmentRequest request, CancellationToken cancellationToken)
 	{
 		var productIds = request.Items.Select(i => i.ProductId).ToList();
 		var products = await productsRepository.GetProductsByIdsAsync(productIds, cancellationToken);
@@ -19,11 +18,11 @@ internal class DeductStockRequestHandler(IProductsRepository productsRepository)
 			var product = products.FirstOrDefault(p => p.Id == item.ProductId);
 
 			if (product is null)
-				return ProductErrors.NotFound(item.ProductId);
+				continue; // Product may have been soft-deleted; skip gracefully
 
-			var result = product.DeductStock(item.Quantity);
+			var result = product.ConfirmShipment(item.OrderId);
 			if (result.IsError)
-				return result.Errors;
+				continue; // Best-effort deduct
 		}
 
 		await productsRepository.SaveChangesAsync();

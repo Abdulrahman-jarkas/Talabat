@@ -16,6 +16,11 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.IsRequired()
 			.ValueGeneratedNever();
 
+		builder.Property<uint>("xmin")
+			.HasColumnType("xid")
+			.ValueGeneratedOnAddOrUpdate()
+			.IsConcurrencyToken();
+
 		builder.Property(cs => cs.CustomerId)
 			.HasColumnName("CustomerId")
 			.IsRequired();
@@ -50,10 +55,6 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 
 		builder.Property(cs => cs.PaymentId)
 			.HasColumnName("PaymentId")
-			.IsRequired(false);
-
-		builder.Property(cs => cs.OrderId)
-			.HasColumnName("OrderId")
 			.IsRequired(false);
 
 		builder.HasMany(cs => cs.Items)
