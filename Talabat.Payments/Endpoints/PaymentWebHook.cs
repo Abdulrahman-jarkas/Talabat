@@ -39,8 +39,7 @@ public class PaymentWebHook(IPaymentService paymentService) : Endpoint<PaymentWe
 			PaymentEventType.PaymentRefundFailed => paymentService.OnPaymentRefundFailed(req.PaymentId),
 			_ => Task.FromResult<ErrorOr<Success>>(Error.Validation(
 					code: "Payment.InvalidEventType",
-					description: $"Invalid payment event type {req.EventType.ToString()}."
-				))
+					description: $"Invalid payment event type {req.EventType}."))
 		};
 
 

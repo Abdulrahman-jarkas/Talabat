@@ -12,10 +12,10 @@ internal class Payment : ValueObject
 
 	private Payment(
 		Guid paymentId,
-		PaymentStatusValues paymentStatus)
+		PaymentStatusValues status)
 	{
 		PaymentId = Guard.Against.Default(paymentId, nameof(paymentId));
-		Status = Guard.Against.EnumOutOfRange(paymentStatus);
+		Status = Guard.Against.EnumOutOfRange(status);
 	}
 
 	public static Payment Create(Guid paymentId)

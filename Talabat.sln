@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Users.UnitTests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Users.IntegrationTests", "Talabat.Users.IntegrationTests\Talabat.Users.IntegrationTests.csproj", "{6241708A-4DF8-48A1-8646-923CA81AB0BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talabat.Api", "Talabat.Api\Talabat.Api.csproj", "{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -175,6 +177,18 @@ Global
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x64.Build.0 = Release|Any CPU
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x86.ActiveCfg = Release|Any CPU
 		{6241708A-4DF8-48A1-8646-923CA81AB0BA}.Release|x86.Build.0 = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|x64.Build.0 = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Debug|x86.Build.0 = Debug|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|x64.ActiveCfg = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|x64.Build.0 = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|x86.ActiveCfg = Release|Any CPU
+		{9B4FF79F-27D4-4C5E-BA51-D66BBFC50C4C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

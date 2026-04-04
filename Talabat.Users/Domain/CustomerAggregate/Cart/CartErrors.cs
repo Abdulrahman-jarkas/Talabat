@@ -15,4 +15,7 @@ internal record CartErrors
 
 	public static Error NoProductsFoundForCartItems
 				=> Error.NotFound("CartItems.ProductsNotFound", "No products were found for the cart items.");
+
+	public static Error InsufficientStock(Guid productId)
+		=> Error.Conflict("CartItem.InsufficientStock", $"Product '{productId}' does not have enough stock.");
 }

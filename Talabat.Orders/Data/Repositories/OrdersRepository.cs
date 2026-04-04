@@ -14,7 +14,6 @@ internal class OrdersRepository(OrdersDbContext context) : IOrdersRepository
 	public Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken = default)
 	{
 		return context.Orders
-			.Include(o => o.Items)
 			.FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 	}
 

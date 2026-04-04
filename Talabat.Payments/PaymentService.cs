@@ -23,16 +23,10 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		var payment = await paymentsRepository.GetPaymentByIdAsync(paymentId);
 
 		if (payment is null)
-			return Error.Validation(
-					code: "Payment.NotFound",
-					description: $"Payment with id {paymentId} was not found."
-				);
+			return PaymentErrors.NotFound(paymentId);
 
 		if(payment.Status != PaymentStatus.Pending)
-			return Error.Validation(
-					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}."
-				);
+			return PaymentErrors.InvalidStatus(paymentId, payment.Status);
 
 		payment.SetStatus(PaymentStatus.Failed);
 
@@ -48,16 +42,10 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		var payment = await paymentsRepository.GetPaymentByIdAsync(paymentId);
 
 		if (payment is null)
-			return Error.Validation(
-					code: "Payment.NotFound",
-					description: $"Payment with id {paymentId} was not found."
-				);
+			return PaymentErrors.NotFound(paymentId);
 
 		if (payment.Status != PaymentStatus.Refunding)
-			return Error.Validation(
-					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}."
-				);
+			return PaymentErrors.InvalidStatus(paymentId, payment.Status);
 
 		payment.SetStatus(PaymentStatus.RefundFailed);
 		await paymentsRepository.SaveChangesAsync();
@@ -70,19 +58,15 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		var payment = await paymentsRepository.GetPaymentByIdAsync(paymentId);
 
 		if (payment is null)
-			return Error.Validation(
-					code: "Payment.NotFound",
-					description: $"Payment with id {paymentId} was not found."
-				);
+			return PaymentErrors.NotFound(paymentId);
 
 		if (payment.Status != PaymentStatus.Refunding)
-			return Error.Validation(
-					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}."
-				);
+			return PaymentErrors.InvalidStatus(paymentId, payment.Status);
 
 		payment.SetStatus(PaymentStatus.Refunded);
 		await paymentsRepository.SaveChangesAsync();
+
+		await publisher.Publish(new PaymentRefundedEvent(payment.Id, payment.CustomerId));
 
 		return Result.Success;
 	}
@@ -92,15 +76,10 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		var payment = await paymentsRepository.GetPaymentByIdAsync(paymentId);
 
 		if (payment is null)
-			return Error.Validation(
-					code: "Payment.NotFound",
-					description: $"Payment with id {paymentId} was not found."
-				);
+			return PaymentErrors.NotFound(paymentId);
 
 		if (payment.Status != PaymentStatus.Pending)
-			return Error.Validation(
-					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}.");
+			return PaymentErrors.InvalidStatus(paymentId, payment.Status);
 
 		payment.SetStatus(PaymentStatus.Paid);
 		await paymentsRepository.SaveChangesAsync();
@@ -115,16 +94,10 @@ public class PaymentService(IPaymentsRepository paymentsRepository, ISender send
 		var payment = await paymentsRepository.GetPaymentByIdAsync(paymentId);
 
 		if (payment is null)
-			return Error.Validation(
-					code: "Payment.NotFound",
-					description: $"Payment with id {paymentId} was not found."
-				);
+			return PaymentErrors.NotFound(paymentId);
 
 		if (payment.Status != PaymentStatus.Paid)
-			return Error.Validation(
-					code: "Payment.InvalidStatus",
-					description: $"Payment with id {paymentId} has invalid status {payment.Status.ToString()}."
-				);
+			return PaymentErrors.InvalidStatus(paymentId, payment.Status);
 
 		payment.SetStatus(PaymentStatus.Refunding);
 		await paymentsRepository.SaveChangesAsync();

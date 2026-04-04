@@ -18,7 +18,7 @@ namespace Talabat.Users.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Users")
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -28,12 +28,8 @@ namespace Talabat.Users.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ActiveCheckoutSession")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("ActiveCheckoutSession");
-
                     b.Property<string>("Cart")
-                        .HasColumnType("jsonb")
+                        .HasColumnType("text")
                         .HasColumnName("Cart");
 
                     b.Property<string>("Email")
@@ -45,13 +41,6 @@ namespace Talabat.Users.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Customers", "Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("1fb673f4-6974-478b-b4eb-b9882dd13c5f"),
-                            Email = "customer@gamil.com"
-                        });
                 });
 
             modelBuilder.Entity("Talabat.Users.Domain.CustomerAggregate.CustomerAddress", b =>
@@ -90,13 +79,6 @@ namespace Talabat.Users.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Merchants", "Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("1fb673f4-6974-478b-b4eb-b9882dd13c5c"),
-                            Email = "merchant1@gamil.com"
-                        });
                 });
 
             modelBuilder.Entity("Talabat.Users.Domain.CustomerAggregate.CustomerAddress", b =>

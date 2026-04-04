@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Talabat.Orders.Application.BackgroundServices;
-using Talabat.Orders.Application.Services;
 using Talabat.Orders.Data;
 using Talabat.Orders.Data.Repositories;
+using Talabat.SharedKernal;
 
 namespace Talabat.Orders;
 
@@ -14,7 +14,8 @@ public static class DependencyInjection
 	{
 		services.AddPersistence(configuration)
 			.AddMediatR()
-			.AddApplicationServices();
+			.AddBackgroundServices()
+			.AddEndpoints();
 
 		return services;
 	}
@@ -39,10 +40,16 @@ public static class DependencyInjection
 		return services;
 	}
 
-	private static IServiceCollection AddApplicationServices(this IServiceCollection services)
+	private static IServiceCollection AddBackgroundServices(this IServiceCollection services)
 	{
-		services.AddScoped<ICheckoutSessionService, CheckoutSessionService>();
 		services.AddHostedService<CheckoutSessionExpirationService>();
+
+		return services;
+	}
+
+	private static IServiceCollection AddEndpoints(this IServiceCollection services)
+	{
+		EndpointAssemblyRegistry.Register(typeof(DependencyInjection).Assembly);
 
 		return services;
 	}

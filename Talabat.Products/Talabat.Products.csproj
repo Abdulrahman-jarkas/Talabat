@@ -18,8 +18,4 @@
 		<ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Integration\" />
-	</ItemGroup>
 </Project>

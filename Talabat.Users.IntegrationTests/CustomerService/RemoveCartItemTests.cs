@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
+using Talabat.Users.Application.Customer.Commands.AddCartItem;
+using Talabat.Users.Application.Customer.Commands.RemoveCartItem;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.Domain.CustomerAggregate.Cart;
 using Talabat.Users.IntegrationTests.Infrastructure;
@@ -12,7 +14,8 @@ namespace Talabat.Users.IntegrationTests.CustomerService;
 public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 {
 	private readonly UsersApiFactory _factory;
-	private Users.CustomerService _customerService = null!;
+	private AddCartItemCommandHandler _addHandler = null!;
+	private RemoveCartItemCommandHandler _removeHandler = null!;
 
 	public RemoveCartItemTests(UsersApiFactory factory)
 	{
@@ -22,7 +25,8 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 	public async Task InitializeAsync()
 	{
 		await _factory.ResetDatabaseAsync();
-		_customerService = TestHelper.CreateCustomerServiceAsync(_factory);
+		_addHandler = TestHelper.CreateAddCartItemHandler(_factory);
+		_removeHandler = TestHelper.CreateRemoveCartItemHandler(_factory);
 	}
 
 	public Task DisposeAsync() => Task.CompletedTask;
@@ -37,10 +41,12 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 
 		// Set up product mock and add to cart
 		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
-		await TestHelper.AddProductToCartAsync(_customerService, productId, quantity);
+		await TestHelper.AddProductToCartAsync(_addHandler, productId, quantity);
 
 		// Act
-		var result = await _customerService.RemoveCartItemAsync(productId, CancellationToken.None);
+		var result = await _removeHandler.Handle(
+			new RemoveCartItemCommand(Constants.Customer.Id, productId),
+			CancellationToken.None);
 		_factory.DbContext.ChangeTracker.Clear();
 
 		// Assert
@@ -65,11 +71,13 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 
 		// First, create a cart with one item
 		TestHelper.SetupProductQuery(_factory, existingProductId, merchantId, Constants.Product.BasePrice);
-		await TestHelper.AddProductToCartAsync(_customerService, existingProductId, quantity);
+		await TestHelper.AddProductToCartAsync(_addHandler, existingProductId, quantity);
 
 		// Act - Try to remove a different product that doesn't exist in the cart
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.RemoveCartItemAsync(nonExistentProductId, CancellationToken.None);
+		var result = await _removeHandler.Handle(
+			new RemoveCartItemCommand(Constants.Customer.Id, nonExistentProductId),
+			CancellationToken.None);
 
 		// Assert
 		result.IsError.Should().BeTrue();
@@ -87,14 +95,16 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 
 		// Set up both products and add to cart
 		TestHelper.SetupProductQuery(_factory, firstProductId, merchantId, Constants.Product.BasePrice);
-		await TestHelper.AddProductToCartAsync(_customerService, firstProductId, quantity);
+		await TestHelper.AddProductToCartAsync(_addHandler, firstProductId, quantity);
 
 		TestHelper.SetupProductQuery(_factory, secondProductId, merchantId, Constants.Product.BasePrice);
-		await TestHelper.AddProductToCartAsync(_customerService, secondProductId, quantity);
+		await TestHelper.AddProductToCartAsync(_addHandler, secondProductId, quantity);
 
 		// Act
 		_factory.DbContext.ChangeTracker.Clear();
-		var result = await _customerService.RemoveCartItemAsync(firstProductId, CancellationToken.None);
+		var result = await _removeHandler.Handle(
+			new RemoveCartItemCommand(Constants.Customer.Id, firstProductId),
+			CancellationToken.None);
 		_factory.DbContext.ChangeTracker.Clear();
 
 		// Assert

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Talabat.SharedKernal;
 using Talabat.Users.Data;
 using Talabat.Users.Data.Repositories;
 
@@ -11,7 +12,8 @@ public static class DependencyInjection
 	public static IServiceCollection AddUsersInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPersistence(configuration)
-			.AddMediatR();
+			.AddMediatR()
+			.AddEndpoints();
 
 		return services;
 	}
@@ -24,7 +26,6 @@ public static class DependencyInjection
 		});
 
 		services.AddScoped<IUsersRepository, UsersRepository>();
-		services.AddScoped<ICustomerService, CustomerService>();
 
 		return services;
 	}
@@ -32,6 +33,13 @@ public static class DependencyInjection
 	public static IServiceCollection AddMediatR(this IServiceCollection services)
 	{
 		services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining(typeof(DependencyInjection)));
+
+		return services;
+	}
+
+	private static IServiceCollection AddEndpoints(this IServiceCollection services)
+	{
+		EndpointAssemblyRegistry.Register(typeof(DependencyInjection).Assembly);
 
 		return services;
 	}

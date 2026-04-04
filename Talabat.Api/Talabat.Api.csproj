@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FastEndpoints" Version="7.0.1" />
+		<PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Talabat.Orders\Talabat.Orders.csproj" />
+		<ProjectReference Include="..\Talabat.Products\Talabat.Products.csproj" />
+		<ProjectReference Include="..\Talabat.Payments\Talabat.Payments.csproj" />
+		<ProjectReference Include="..\Talabat.Users\Talabat.Users.csproj" />
+		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Data\" />
+	</ItemGroup>
+
+</Project>

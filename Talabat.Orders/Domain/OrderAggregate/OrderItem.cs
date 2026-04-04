@@ -1,4 +1,5 @@
-﻿using Ardalis.GuardClauses;
+﻿using System.Text.Json.Serialization;
+using Ardalis.GuardClauses;
 using Talabat.SharedKernal;
 
 namespace Talabat.Orders.Domain.OrderAggregate;
@@ -11,10 +12,13 @@ internal class OrderItem : ValueObject
 
 	private OrderItem(Guid productId, int quantity, decimal basePrice)
 	{
-		productId = Guard.Against.Default(productId, nameof(productId));
-		quantity = Guard.Against.NegativeOrZero(quantity, nameof(quantity));
-		basePrice = Guard.Against.NegativeOrZero(basePrice, nameof(basePrice));
+		ProductId = Guard.Against.Default(productId, nameof(productId));
+		Quantity = Guard.Against.NegativeOrZero(quantity, nameof(quantity));
+		BasePrice = Guard.Against.NegativeOrZero(basePrice, nameof(basePrice));
 	}
+
+	[JsonConstructor]
+	private OrderItem() { }
 
 	public static OrderItem Create(Guid productId, int quantity, decimal basePrice)
 	{

@@ -8,10 +8,10 @@ public record CustomerErrors
 		Error.NotFound("Customer.CartNotFound", "The cart was not found for the customer.");
 
 	public static Error CartEmpty =>
-		Error.Failure("Customer.CartEmpty", "The cart is empty.");
+		Error.Validation("Customer.CartEmpty", "The cart is empty.");
 
 	public static Error MerchantMismatch =>
-		Error.Failure("Customer.MerchantMismatch", "The cart cannot belong to different merchants.");
+		Error.Conflict("Customer.MerchantMismatch", "The cart cannot belong to different merchants.");
 
 	public static Error CustomerNotFound =>
 		Error.NotFound("Customer.NotFound", "The customer was not found.");

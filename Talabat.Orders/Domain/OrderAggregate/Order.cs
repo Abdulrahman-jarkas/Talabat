@@ -15,7 +15,7 @@ internal class Order : AggregateRoot
     public OrderStatus Status { get; private set; }
     public Payment Payment { get; private set; }
 
-    private readonly List<OrderItem> _items = new();
+    private List<OrderItem> _items = new();
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
     internal Order(
@@ -23,8 +23,8 @@ internal class Order : AggregateRoot
         Guid merchantId,
         Payment payment,
         Guid checkoutSession,
-        Guid addressId)
-    {
+        Guid addressId) : base(Guid.NewGuid())
+	{
         CheckoutSessionId = Guard.Against.Default(checkoutSession);
         AddressId = Guard.Against.Default(addressId);
         CustomerId = Guard.Against.Default(customerId);

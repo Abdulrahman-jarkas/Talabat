@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Talabat.Products.Contracts;
+using Talabat.Users.Application.Customer.Commands.AddCartItem;
+using Talabat.Users.Application.Customer.Commands.RemoveCartItem;
 using Talabat.Users.Data.Repositories;
 using Talabat.Users.Domain.CustomerAggregate;
 using Talabat.Users.IntegrationTests.Infrastructure;
@@ -9,19 +11,16 @@ namespace Talabat.Users.IntegrationTests.TestUtils;
 
 internal static class TestHelper
 {
-	/// <summary>
-	/// Creates a customer service for testing.
-	/// Assumes customer is already seeded by ResetDatabaseAsync.
-	/// </summary>
-	internal static Users.CustomerService CreateCustomerServiceAsync(
-		UsersApiFactory factory)
+	internal static AddCartItemCommandHandler CreateAddCartItemHandler(UsersApiFactory factory)
 	{
 		var repository = new UsersRepository(factory.DbContext);
-		var service = new Users.CustomerService(
-			Constants.Customer.Id,
-			factory.MockMediator,
-			repository);
-		return service;
+		return new AddCartItemCommandHandler(factory.MockMediator, repository);
+	}
+
+	internal static RemoveCartItemCommandHandler CreateRemoveCartItemHandler(UsersApiFactory factory)
+	{
+		var repository = new UsersRepository(factory.DbContext);
+		return new RemoveCartItemCommandHandler(repository);
 	}
 
 	/// <summary>
@@ -29,14 +28,16 @@ internal static class TestHelper
 	/// Note: Test must call SetupProductQuery before this to mock the product service.
 	/// </summary>
 	internal static async Task AddProductToCartAsync(
-		Users.CustomerService customerService,
+		AddCartItemCommandHandler handler,
 		Guid? productId = null,
 		int? quantity = null)
 	{
 		var prodId = productId ?? Constants.Product.Id;
 		var qty = quantity ?? Constants.Product.DefaultQuantity;
 
-		await customerService.AddCartItemAsync(prodId, qty, CancellationToken.None);
+		await handler.Handle(
+			new AddCartItemCommand(Constants.Customer.Id, prodId, qty),
+			CancellationToken.None);
 	}
 
 	/// <summary>
