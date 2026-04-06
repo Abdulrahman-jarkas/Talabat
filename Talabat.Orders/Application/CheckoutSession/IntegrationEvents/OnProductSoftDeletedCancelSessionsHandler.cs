@@ -29,6 +29,10 @@ internal class OnProductSoftDeletedCancelSessionsHandler(
 					cancelResult.Errors);
 		}
 
+		using var scope = ModuleTransactionScope.Create();
+
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+
+		scope.Complete();
 	}
 }

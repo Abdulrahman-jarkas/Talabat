@@ -18,6 +18,6 @@ internal class ProductQueryHandler(IProductsRepository productsRepository) : IRe
 			productResult.Title,
 			productResult.MerchantId,
 			productResult.BasePrice,
-			productResult.Stock.Quantity);
+			productResult.Stock.EffectiveQuantity);
 	}
 }

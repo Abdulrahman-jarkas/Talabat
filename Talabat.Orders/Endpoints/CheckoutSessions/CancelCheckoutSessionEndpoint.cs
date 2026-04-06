@@ -24,7 +24,7 @@ internal class CancelCheckoutSessionEndpoint(ISender sender)
 {
 	public override void Configure()
 	{
-		Delete("/api/checkout-sessions");
+		Post("/api/checkout-sessions/cancel");
 		AllowAnonymous();
 	}
 

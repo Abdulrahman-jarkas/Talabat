@@ -31,6 +31,10 @@ internal class OnProductPriceChangedCancelSessionsHandler(
 
 		// SaveChangesAsync dispatches CheckoutSessionCancelledEvent for each cancelled session,
 		// which triggers reservation removal via OnCheckoutSessionCancelledRemoveReservationsHandler.
+		using var scope = ModuleTransactionScope.Create();
+
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+
+		scope.Complete();
 	}
 }

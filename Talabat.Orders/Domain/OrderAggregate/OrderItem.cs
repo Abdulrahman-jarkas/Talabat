@@ -8,27 +8,24 @@ internal class OrderItem : ValueObject
 {
 	public Guid ProductId { get; init; }
 	public int Quantity { get; init; }
-	public decimal BasePrice { get; init; }
 
-	private OrderItem(Guid productId, int quantity, decimal basePrice)
+	private OrderItem(Guid productId, int quantity)
 	{
 		ProductId = Guard.Against.Default(productId, nameof(productId));
 		Quantity = Guard.Against.NegativeOrZero(quantity, nameof(quantity));
-		BasePrice = Guard.Against.NegativeOrZero(basePrice, nameof(basePrice));
 	}
 
 	[JsonConstructor]
 	private OrderItem() { }
 
-	public static OrderItem Create(Guid productId, int quantity, decimal basePrice)
+	public static OrderItem Create(Guid productId, int quantity)
 	{
-		return new OrderItem(productId, quantity, basePrice);
+		return new OrderItem(productId, quantity);
 	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
 		yield return ProductId;
 		yield return Quantity;
-		yield return BasePrice;
 	}
 }

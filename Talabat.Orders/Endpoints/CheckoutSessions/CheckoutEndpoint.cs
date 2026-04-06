@@ -8,6 +8,7 @@ namespace Talabat.Orders.Endpoints.CheckoutSessions;
 public class CheckoutRequest
 {
 	public Guid CheckoutSessionId { get; set; }
+	public Guid AddressId { get; set; }
 }
 
 public class CheckoutResponse
@@ -28,7 +29,7 @@ internal class CheckoutEndpoint(ISender sender)
 	public override async Task HandleAsync(CheckoutRequest req, CancellationToken ct)
 	{
 		var result = await sender.Send(
-			new CheckoutCommand(req.CheckoutSessionId), ct);
+			new CheckoutCommand(req.CheckoutSessionId, req.AddressId), ct);
 
 		var mapped = result.Then(r => new CheckoutResponse
 		{

@@ -11,13 +11,17 @@ internal class CheckoutSessionLifetime : ValueObject
 
 	public static readonly TimeSpan MaxDuration = TimeSpan.FromMinutes(2);
 
-	private bool IsLifetimeExceeded => StoredStatus == CheckoutSessionStatusValues.Active && DateTime.UtcNow >= ExpiresAt;
+	private bool IsLifetimeExceeded =>
+		(StoredStatus == CheckoutSessionStatusValues.Active)
+		&& DateTime.UtcNow >= ExpiresAt;
 
 	public CheckoutSessionStatusValues Status => IsLifetimeExceeded
 		? CheckoutSessionStatusValues.Expired
 		: StoredStatus;
 
 	public bool IsActive => Status == CheckoutSessionStatusValues.Active;
+	public bool IsCheckedOut => Status == CheckoutSessionStatusValues.CheckedOut;
+	public bool IsClosed => Status == CheckoutSessionStatusValues.Closed;
 	public bool IsExpired => Status == CheckoutSessionStatusValues.Expired;
 
 	private CheckoutSessionLifetime(CheckoutSessionStatusValues status, DateTime createdAt, DateTime expiresAt)
@@ -33,10 +37,18 @@ internal class CheckoutSessionLifetime : ValueObject
 		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Active, now, now.Add(MaxDuration));
 	}
 
-	public ErrorOr<CheckoutSessionLifetime> Complete()
+	public ErrorOr<CheckoutSessionLifetime> Checkout()
 	{
 		if (!IsActive)
 			return CheckoutSessionErrors.NotActive;
+
+		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.CheckedOut, CreatedAt, ExpiresAt);
+	}
+
+	public ErrorOr<CheckoutSessionLifetime> Complete()
+	{
+		if (!IsCheckedOut)
+			return CheckoutSessionErrors.NotCheckedOut;
 
 		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Completed, CreatedAt, ExpiresAt);
 	}
@@ -47,6 +59,14 @@ internal class CheckoutSessionLifetime : ValueObject
 			return CheckoutSessionErrors.NotActive;
 
 		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Cancelled, CreatedAt, ExpiresAt);
+	}
+
+	public ErrorOr<CheckoutSessionLifetime> Close()
+	{
+		if (!IsCheckedOut)
+			return CheckoutSessionErrors.NotCheckedOut;
+
+		return new CheckoutSessionLifetime(CheckoutSessionStatusValues.Closed, CreatedAt, ExpiresAt);
 	}
 
 	public ErrorOr<CheckoutSessionLifetime> MarkExpired()

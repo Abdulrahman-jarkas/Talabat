@@ -14,6 +14,11 @@ internal static class CheckoutSessionErrors
 			code: "CheckoutSession.NotActive",
 			description: "Checkout session is not active.");
 
+	public static Error NotCheckedOut =>
+		Error.Conflict(
+			code: "CheckoutSession.NotCheckedOut",
+			description: "Checkout session has not been checked out yet.");
+
 	public static Error SessionExpired =>
 		Error.Conflict(
 			code: "CheckoutSession.SessionExpired",
@@ -53,4 +58,9 @@ internal static class CheckoutSessionErrors
 		Error.Conflict(
 			code: "CheckoutSession.InsufficientStock",
 			description: $"Insufficient stock for product {productId}.");
+
+	public static Error AddressNotFound(Guid addressId) =>
+		Error.NotFound(
+			code: "CheckoutSession.AddressNotFound",
+			description: $"Address {addressId} was not found for this customer.");
 }

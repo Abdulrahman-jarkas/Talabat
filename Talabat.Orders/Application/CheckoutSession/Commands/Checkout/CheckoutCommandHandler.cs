@@ -4,6 +4,8 @@ using Talabat.Orders.Data.Repositories;
 using Talabat.Orders.Domain.CheckoutSessionAggregate;
 using Talabat.Payments.Contracts;
 using Talabat.Products.Contracts;
+using Talabat.SharedKernal;
+using Talabat.Users.Contracts;
 
 namespace Talabat.Orders.Application.CheckoutSession.Commands.Checkout;
 
@@ -22,19 +24,22 @@ internal class CheckoutCommandHandler(
 		if (checkoutSession.Lifetime.IsExpired)
 			return CheckoutSessionErrors.SessionExpired;
 
-		// 2. Validate prices against Products module
+		// 2. Validate the address belongs to the customer
+		var customerDetails = await sender.Send(
+			new CustomerDetailsQuery(checkoutSession.CustomerId),
+			cancellationToken);
+
+		if (customerDetails is null || !customerDetails.Addresses.Any(a => a.Id == command.AddressId))
+			return CheckoutSessionErrors.AddressNotFound(command.AddressId);
+
+		// 3. Validate prices against Products module
 		var productIds = checkoutSession.Items.Select(i => i.ProductId).ToList();
 		var productDetails = await sender.Send(new ProductsQuery(productIds), cancellationToken);
 
 		if (productDetails is null || productDetails.Count == 0)
 			return CheckoutSessionErrors.ProductsNotFound;
 
-		var currentPrices = productDetails.ToDictionary(p => p.Id, p => p.BasePrice);
-		var validationResult = checkoutSession.ValidatePrices(currentPrices);
-		if (validationResult.IsError)
-			return validationResult.Errors;
-
-		// 3. Create payment session
+		// 4. Create payment session
 		var paymentSession = await sender.Send(
 			new CreatePaymentSessionRequest(
 				checkoutSession.CustomerId,
@@ -45,13 +50,21 @@ internal class CheckoutCommandHandler(
 		if (paymentSession.IsError)
 			return paymentSession.Errors;
 
-		// 4. Record payment on checkout session
-		var initiateResult = checkoutSession.InitiatePayment(paymentSession.Value.PaymentId);
-		if (initiateResult.IsError)
-			return initiateResult.Errors;
+		// 5. Checkout session with payment, address, and price validation
+		var checkoutResult = checkoutSession.Checkout(
+			paymentSession.Value.PaymentId,
+			command.AddressId,
+			productDetails.Select(p => (p.Id, p.BasePrice, p.Quantity)).ToList());
+		if (checkoutResult.IsError)
+			return checkoutResult.Errors;
+
+		using var scope = ModuleTransactionScope.Create();
 
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+
+		scope.Complete();
 
 		return new CheckoutResult(paymentSession.Value.PaymentId, paymentSession.Value.PaymentUrl);
 	}
 }
+

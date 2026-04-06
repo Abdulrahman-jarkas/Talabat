@@ -3,7 +3,6 @@ using MediatR;
 using Talabat.Orders.Data.Repositories;
 using Talabat.Orders.Domain.CheckoutSessionAggregate;
 using Talabat.Products.Contracts;
-using Talabat.SharedKernal;
 using Talabat.Users.Contracts;
 using CheckoutSessionAggregate = Talabat.Orders.Domain.CheckoutSessionAggregate;
 
@@ -20,14 +19,14 @@ internal class CreateCheckoutSessionCommandHandler(
 		if (existingSession is not null && existingSession.Lifetime.IsActive)
 			return CheckoutSessionErrors.ActiveSessionAlreadyExists;
 
-		// 1. Get cart details from Users module
-		var cartDetails = await sender.Send(new CartDetailsQuery(command.CustomerId), cancellationToken);
+		// 1. Get customer details from Users module
+		var customerDetails = await sender.Send(new CustomerDetailsQuery(command.CustomerId), cancellationToken);
 
-		if (cartDetails is null || cartDetails.CartItems.Count == 0)
+		if (customerDetails?.Cart is null || customerDetails.Cart.Items.Count == 0)
 			return CheckoutSessionErrors.CartEmpty;
 
 		// 2. Get latest product details from Products module
-		var productIds = cartDetails.CartItems.Select(ci => ci.productId).ToList();
+		var productIds = customerDetails.Cart.Items.Select(ci => ci.ProductId).ToList();
 		var productDetails = await sender.Send(new ProductsQuery(productIds), cancellationToken);
 
 		if (productDetails is null || productDetails.Count == 0)
@@ -35,46 +34,27 @@ internal class CreateCheckoutSessionCommandHandler(
 
 		// 3. Build checkout items and validate availability
 		var checkoutItems = new List<CheckoutItem>();
-		var reservationItems = new List<AddReservationItem>();
 
-		foreach (var cartItem in cartDetails.CartItems)
+		foreach (var cartItem in customerDetails.Cart.Items)
 		{
-			var product = productDetails.FirstOrDefault(p => p.Id == cartItem.productId);
+			var product = productDetails.FirstOrDefault(p => p.Id == cartItem.ProductId);
 			if (product is null)
-				return CheckoutSessionErrors.ProductNotFound(cartItem.productId);
+				return CheckoutSessionErrors.ProductNotFound(cartItem.ProductId);
 
-			if (product.Quantity < cartItem.quantity)
-				return CheckoutSessionErrors.InsufficientStock(cartItem.productId);
+			if (product.Quantity < cartItem.Quantity)
+				return CheckoutSessionErrors.InsufficientStock(cartItem.ProductId);
 
 			checkoutItems.Add(CheckoutItem.Create(
-				cartItem.productId,
+				cartItem.ProductId,
 				product.BasePrice,
-				cartItem.quantity));
+				cartItem.Quantity));
 		}
 
 		// 4. Create checkout session aggregate
-		var checkoutSession = new CheckoutSessionAggregate.CheckoutSession(command.CustomerId, cartDetails.MerchantId, command.AddressId, checkoutItems);
-
-		// 5. Reserve products + save session in a single transaction
-		foreach (var item in checkoutItems)
-		{
-			reservationItems.Add(new AddReservationItem(
-				item.ProductId,
-				checkoutSession.Id,
-				command.CustomerId,
-				item.Quantity));
-		}
-
-		using var scope = ModuleTransactionScope.Create();
-
-		var reservationResult = await sender.Send(new AddReservationRequest(reservationItems), cancellationToken);
-		if (reservationResult.IsError)
-			return reservationResult.Errors;
+		var checkoutSession = new CheckoutSessionAggregate.CheckoutSession(command.CustomerId, customerDetails.Cart.MerchantId, checkoutItems);
 
 		await checkoutSessionRepository.AddAsync(checkoutSession, cancellationToken);
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
-
-		scope.Complete();
 
 		return Result.Success;
 	}

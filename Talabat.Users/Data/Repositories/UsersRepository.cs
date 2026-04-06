@@ -11,6 +11,13 @@ internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 			.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 	}
 
+	public async Task<Customer?> GetCustomerWithAddressesByIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+	{
+		return await dbContext.Customers
+			.Include(c => c.Addresses)
+			.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
+	}
+
 	public async Task<List<Customer>?> GetCustomersWithProductInCartAsync(Guid productId, CancellationToken cancellationToken = default)
 	{
 		// Load all customers with carts (Cart is JSON column, can't be queried directly in LINQ)

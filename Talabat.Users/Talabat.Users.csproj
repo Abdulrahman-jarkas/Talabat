@@ -31,6 +31,7 @@
 
 
 	<ItemGroup>
+	  <Folder Include="Application\Customer\Queries\CartDetails\" />
 	  <Folder Include="Domain\CustomerAggregate\Checkout\" />
 	  <Folder Include="Integration\" />
 	</ItemGroup>

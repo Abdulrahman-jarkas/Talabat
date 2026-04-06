@@ -2,6 +2,7 @@ using ErrorOr;
 using MediatR;
 using Talabat.Orders.Data.Repositories;
 using Talabat.Orders.Domain.CheckoutSessionAggregate;
+using Talabat.SharedKernal;
 
 namespace Talabat.Orders.Application.CheckoutSession.Commands.CancelCheckoutSession;
 
@@ -19,7 +20,11 @@ internal class CancelCheckoutSessionCommandHandler(ICheckoutSessionRepository ch
 		if (result.IsError)
 			return result.Errors;
 
+		using var scope = ModuleTransactionScope.Create();
+
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);
+
+		scope.Complete();
 
 		return Result.Success;
 	}

@@ -18,22 +18,27 @@ internal class Order : AggregateRoot
     private List<OrderItem> _items = new();
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
-    internal Order(
-        Guid customerId,
-        Guid merchantId,
-        Payment payment,
-        Guid checkoutSession,
-        Guid addressId) : base(Guid.NewGuid())
+	internal Order(
+		Guid customerId,
+		Guid merchantId,
+		Payment payment,
+		Guid checkoutSessionId,
+		Guid addressId,
+		IEnumerable<(Guid ProductId, int Quantity)> items) : base(Guid.NewGuid())
 	{
-        CheckoutSessionId = Guard.Against.Default(checkoutSession);
-        AddressId = Guard.Against.Default(addressId);
-        CustomerId = Guard.Against.Default(customerId);
-        MerchantId = Guard.Against.Default(merchantId);
-        Status = OrderStatus.FromStatusValue(OrderStatusValues.Placed);
-        Payment = Guard.Against.Null(payment);
+		CheckoutSessionId = Guard.Against.Default(checkoutSessionId);
+		AddressId = Guard.Against.Default(addressId);
+		CustomerId = Guard.Against.Default(customerId);
+		MerchantId = Guard.Against.Default(merchantId);
+		Status = OrderStatus.FromStatusValue(OrderStatusValues.Placed);
+		Payment = Guard.Against.Null(payment);
 
-        _domainEvents.Add(new OrderPlacedEvent(Id, CustomerId, MerchantId, CheckoutSessionId));
-    }
+		foreach (var item in items)
+			_items.Add(OrderItem.Create(item.ProductId, item.Quantity));
+
+		_domainEvents.Add(new OrderPlacedEvent(Id, CustomerId, MerchantId, CheckoutSessionId,
+			_items.Select(i => i.ProductId).ToList()));
+	}
 
     public ErrorOr<Success> Ship()
     {
@@ -44,7 +49,7 @@ internal class Order : AggregateRoot
 
         Status = result.Value;
 
-        _domainEvents.Add(new OrderShippedEvent(Id, MerchantId, CustomerId));
+        _domainEvents.Add(new OrderShippedEvent(Id, MerchantId, CustomerId, _items.Select(i => i.ProductId).ToList()));
 
         return Result.Success;
     }
@@ -72,15 +77,8 @@ internal class Order : AggregateRoot
 
         Status = result.Value;
 
-        _domainEvents.Add(new OrderCancelledEvent(Id, MerchantId, CustomerId));
+        _domainEvents.Add(new OrderCancelledEvent(Id, MerchantId, CustomerId, Payment.PaymentId));
 
-        return Result.Success;
-    }
-
-    public ErrorOr<Success> AddItem(Guid productId, int quantity, decimal basePrice)
-    {
-        var item = OrderItem.Create(productId, quantity, basePrice);
-        _items.Add(item);
         return Result.Success;
     }
 

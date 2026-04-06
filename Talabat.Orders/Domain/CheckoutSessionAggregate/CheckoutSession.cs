@@ -21,14 +21,12 @@ internal class CheckoutSession : AggregateRoot
 	internal CheckoutSession(
 		Guid customerId,
 		Guid merchantId,
-		Guid addressId,
 		IEnumerable<CheckoutItem> items,
 		Guid? id = null)
 		: base(id ?? Guid.NewGuid())
 	{
 		CustomerId = Guard.Against.Default(customerId, nameof(customerId));
 		MerchantId = Guard.Against.Default(merchantId, nameof(merchantId));
-		AddressId = Guard.Against.Default(addressId, nameof(addressId));
 
 		Guard.Against.NullOrEmpty(items, nameof(items));
 		_items.AddRange(items);
@@ -39,29 +37,44 @@ internal class CheckoutSession : AggregateRoot
 		_domainEvents.Add(new CheckoutSessionCreatedEvent(Id, CustomerId));
 	}
 
-	public ErrorOr<Success> ValidatePrices(IReadOnlyDictionary<Guid, decimal> currentPrices)
+	private ErrorOr<Success> ValidateProducts(IReadOnlyList<(Guid ProductId, decimal Price, int AvailableQuantity)> currentProducts)
 	{
-		if (!Lifetime.IsActive)
-			return CheckoutSessionErrors.SessionExpired;
+		var productMap = currentProducts.ToDictionary(p => p.ProductId, p => p);
 
 		foreach (var item in _items)
 		{
-			if (!currentPrices.TryGetValue(item.ProductId, out var currentPrice))
+			if (!productMap.TryGetValue(item.ProductId, out var product))
 				return CheckoutSessionErrors.ProductNotFound(item.ProductId);
 
-			if (currentPrice != item.Price)
+			if (product.Price != item.Price)
 				return CheckoutSessionErrors.PriceMismatch(item.ProductId);
+
+			if (product.AvailableQuantity < item.Quantity)
+				return CheckoutSessionErrors.InsufficientStock(item.ProductId);
 		}
 
 		return Result.Success;
 	}
 
-	public ErrorOr<Success> InitiatePayment(Guid paymentId)
+	public ErrorOr<Success> Checkout(Guid paymentId, Guid addressId, IReadOnlyList<(Guid ProductId, decimal Price, int AvailableQuantity)> currentProducts)
 	{
-		if (!Lifetime.IsActive)
-			return CheckoutSessionErrors.NotActive;
+		var lifetimeResult = Lifetime.Checkout();
+		if (lifetimeResult.IsError)
+			return lifetimeResult.Errors;
+
+		var productValidation = ValidateProducts(currentProducts);
+		if (productValidation.IsError)
+			return productValidation.Errors;
 
 		PaymentId = Guard.Against.Default(paymentId, nameof(paymentId));
+		AddressId = Guard.Against.Default(addressId, nameof(addressId));
+		Lifetime = lifetimeResult.Value;
+
+		_domainEvents.Add(new CheckoutSessionCheckedOutEvent(
+			Id,
+			CustomerId,
+			_items.Select(i => new CheckoutCheckedOutItem(i.ProductId, i.Quantity)).ToList()));
+
 		return Result.Success;
 	}
 
@@ -73,7 +86,13 @@ internal class CheckoutSession : AggregateRoot
 
 		Lifetime = lifetimeResult.Value;
 
-		_domainEvents.Add(new CheckoutSessionCompletedEvent(Id, CustomerId, PaymentId!.Value));
+		_domainEvents.Add(new CheckoutSessionCompletedEvent(
+			Id,
+			CustomerId,
+			MerchantId,
+			PaymentId!.Value,
+			AddressId,
+			_items.Select(i => new CheckoutCompletedItem(i.ProductId, i.Quantity)).ToList()));
 
 		return Result.Success;
 	}
@@ -86,7 +105,20 @@ internal class CheckoutSession : AggregateRoot
 
 		Lifetime = lifetimeResult.Value;
 
-		_domainEvents.Add(new CheckoutSessionCancelledEvent(Id, CustomerId));
+		_domainEvents.Add(new CheckoutSessionCancelledEvent(Id, CustomerId, _items.Select(i => i.ProductId).ToList()));
+
+		return Result.Success;
+	}
+
+	public ErrorOr<Success> Close()
+	{
+		var lifetimeResult = Lifetime.Close();
+		if (lifetimeResult.IsError)
+			return lifetimeResult.Errors;
+
+		Lifetime = lifetimeResult.Value;
+
+		_domainEvents.Add(new CheckoutSessionClosedEvent(Id, CustomerId, _items.Select(i => i.ProductId).ToList()));
 
 		return Result.Success;
 	}
@@ -99,7 +131,7 @@ internal class CheckoutSession : AggregateRoot
 
 		Lifetime = lifetimeResult.Value;
 
-		_domainEvents.Add(new CheckoutSessionExpiredEvent(Id, CustomerId));
+		_domainEvents.Add(new CheckoutSessionExpiredEvent(Id, CustomerId, _items.Select(i => i.ProductId).ToList()));
 
 		return Result.Success;
 	}

@@ -6,4 +6,5 @@ public record OrderPlacedEvent(
 	Guid OrderId,
 	Guid CustomerId,
 	Guid MerchantId,
-	Guid CheckoutSessionId) : IDomainEvent;
+	Guid CheckoutSessionId,
+	IReadOnlyList<Guid> ProductIds) : IDomainEvent;
