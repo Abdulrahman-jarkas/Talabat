@@ -3,7 +3,7 @@
 public record ProductResponse(
 	Guid Id,
 	string Title,
-	Guid Merchant,
+	Guid ShopId,
 	decimal BasePrice,
 	int Quantity
 );

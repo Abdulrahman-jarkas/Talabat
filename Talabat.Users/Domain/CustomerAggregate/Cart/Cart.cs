@@ -10,18 +10,18 @@ internal class Cart : ValueObject
 	// Use init to allow JSON deserialization but prevent mutation after construction
 	public IReadOnlyList<CartItem> Items { get; init; } = new List<CartItem>();
 
-	public Guid MerchantId { get; init; }
+	public Guid ShopId { get; init; }
 
-	internal Cart(Guid merchantId)
+	internal Cart(Guid shopId)
 	{
-		MerchantId = Guard.Against.Default(merchantId);
+		ShopId = Guard.Against.Default(shopId);
 		Items = new List<CartItem>();
 	}
 
 	// Private constructor for creating new instances with modified items
-	private Cart(Guid merchantId, List<CartItem> items)
+	private Cart(Guid shopId, List<CartItem> items)
 	{
-		MerchantId = merchantId;
+		ShopId = shopId;
 		Items = items;
 	}
 
@@ -39,7 +39,7 @@ internal class Cart : ValueObject
 			newItems.Add(CartItem.Create(productId, quantity));
 		}
 
-		return new Cart(MerchantId, newItems);
+		return new Cart(ShopId, newItems);
 	}
 
 	public ErrorOr<Cart> RemoveCartItem(Guid productId)
@@ -50,12 +50,12 @@ internal class Cart : ValueObject
 
 		var newItems = new List<CartItem>(Items);
 		newItems.Remove(existingItem);
-		return new Cart(MerchantId, newItems);
+		return new Cart(ShopId, newItems);
 	}
 
 	public override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return MerchantId;
+		yield return ShopId;
 		foreach (var item in Items)
 		{
 			yield return item;

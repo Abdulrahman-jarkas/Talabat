@@ -7,6 +7,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Integration\**" />
+	  <EmbeddedResource Remove="Integration\**" />
+	  <None Remove="Integration\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Talabat.Payments.Contracts\Talabat.Payments.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.Products.Contracts\Talabat.Products.Contracts.csproj" />
 		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
@@ -33,7 +39,6 @@
 	<ItemGroup>
 	  <Folder Include="Application\Customer\Queries\CartDetails\" />
 	  <Folder Include="Domain\CustomerAggregate\Checkout\" />
-	  <Folder Include="Integration\" />
 	</ItemGroup>
 
 </Project>

@@ -23,6 +23,18 @@ internal class OrdersRepository(OrdersDbContext context) : IOrdersRepository
 			.FirstOrDefaultAsync(o => o.CheckoutSessionId == checkoutSessionId, cancellationToken);
 	}
 
+	public async Task<int> CountOrdersTodayByShopAsync(Guid shopId, DateOnly date, CancellationToken cancellationToken = default)
+	{
+		var startOfDay = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+		var endOfDay = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+
+		return await context.Orders
+			.Where(o => o.ShopId == shopId &&
+						EF.Property<DateTime>(o, "CreatedAt") >= startOfDay &&
+						EF.Property<DateTime>(o, "CreatedAt") <= endOfDay)
+			.CountAsync(cancellationToken);
+	}
+
 	public Task SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
 		return context.SaveChangesAsync(cancellationToken);

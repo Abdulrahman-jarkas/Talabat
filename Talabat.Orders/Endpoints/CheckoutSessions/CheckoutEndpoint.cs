@@ -2,6 +2,8 @@ using FastEndpoints;
 using MediatR;
 using Talabat.Orders.Application.CheckoutSession.Commands.Checkout;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Orders.Endpoints.CheckoutSessions;
 
@@ -17,13 +19,15 @@ public class CheckoutResponse
 	public string PaymentUrl { get; set; } = string.Empty;
 }
 
+[RequiredRole(AuthRoles.Customer)]
+//[EnforcePlanLimit(Features.OrdersPerDay)]
 internal class CheckoutEndpoint(ISender sender)
 	: Endpoint<CheckoutRequest, CheckoutResponse>
 {
 	public override void Configure()
 	{
 		Post("/api/checkout-sessions/checkout");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(CheckoutRequest req, CancellationToken ct)

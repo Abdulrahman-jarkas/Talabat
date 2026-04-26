@@ -14,7 +14,7 @@ internal class OnCheckoutSessionCompletedCreateOrderHandler(IOrdersRepository or
 
 		var order = new Domain.OrderAggregate.Order(
 			notification.CustomerId,
-			notification.MerchantId,
+			notification.ShopId,
 			payment,
 			notification.CheckoutSessionId,
 			notification.AddressId,

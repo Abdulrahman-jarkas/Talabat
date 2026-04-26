@@ -62,17 +62,17 @@ public class CustomerTests
 	{
 		// Arrange
 		var customer = CustomerFactory.Create();
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 		var productId = Constants.Product.Id;
 		var quantity = Constants.Product.DefaultQuantity;
 
 		// Act
-		var result = customer.SetCartItem(merchantId, productId, quantity);
+		var result = customer.SetCartItem(shopId, productId, quantity);
 
 		// Assert
 		result.IsError.Should().BeFalse();
 		customer.Cart.Should().NotBeNull();
-		customer.Cart!.MerchantId.Should().Be(merchantId);
+		customer.Cart!.ShopId.Should().Be(shopId);
 		customer.Cart.Items.Should().HaveCount(1);
 		customer.Cart.Items.First().ProductId.Should().Be(productId);
 		customer.Cart.Items.First().Quantity.Should().Be(quantity);
@@ -82,13 +82,13 @@ public class CustomerTests
 	public void SetCartItem_WhenCartExists_ShouldAddItemToCart()
 	{
 		// Arrange
-		var merchantId = Constants.Merchant.Id;
-		var customer = CustomerFactory.CreateWithCart(merchantId);
+		var shopId = Constants.Shop.Id;
+		var customer = CustomerFactory.CreateWithCart(shopId);
 		var newProductId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
 
 		// Act
-		var result = customer.SetCartItem(merchantId, newProductId, quantity);
+		var result = customer.SetCartItem(shopId, newProductId, quantity);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -100,13 +100,13 @@ public class CustomerTests
 	public void SetCartItem_WithExistingProduct_ShouldUpdateQuantity()
 	{
 		// Arrange
-		var merchantId = Constants.Merchant.Id;
-		var customer = CustomerFactory.CreateWithCart(merchantId);
+		var shopId = Constants.Shop.Id;
+		var customer = CustomerFactory.CreateWithCart(shopId);
 		var productId = Constants.Product.Id;
 		var newQuantity = Constants.Product.UpdatedQuantity;
 
 		// Act
-		var result = customer.SetCartItem(merchantId, productId, newQuantity);
+		var result = customer.SetCartItem(shopId, productId, newQuantity);
 
 		// Assert
 		result.IsError.Should().BeFalse();
@@ -115,29 +115,29 @@ public class CustomerTests
 	}
 
 	[Fact]
-	public void SetCartItem_WithDifferentMerchant_ShouldReturnMerchantMismatchError()
+	public void SetCartItem_WithDifferentShop_ShouldReturnShopMismatchError()
 	{
 		// Arrange
-		var merchantId = Constants.Merchant.Id;
-		var customer = CustomerFactory.CreateWithCart(merchantId);
-		var differentMerchantId = Constants.Cart.AlternativeMerchantId;
+		var shopId = Constants.Shop.Id;
+		var customer = CustomerFactory.CreateWithCart(shopId);
+		var differentshopId = Constants.Cart.AlternativeShopId;
 		var productId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
 
 		// Act
-		var result = customer.SetCartItem(differentMerchantId, productId, quantity);
+		var result = customer.SetCartItem(differentshopId, productId, quantity);
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Should().Be(CustomerErrors.MerchantMismatch);
+		result.FirstError.Should().Be(CustomerErrors.ShopMismatch);
 	}
 
 	[Fact]
 	public void RemoveCartItem_WithExistingItem_ShouldRemoveItem()
 	{
 		// Arrange
-		var merchantId = Constants.Merchant.Id;
-		var customer = CustomerFactory.CreateWithCart(merchantId);
+		var shopId = Constants.Shop.Id;
+		var customer = CustomerFactory.CreateWithCart(shopId);
 		var productId = Constants.Product.Id;
 
 		// Act
@@ -167,8 +167,8 @@ public class CustomerTests
 	public void ResetCart_ShouldClearCart()
 	{
 		// Arrange
-		var merchantId = Constants.Merchant.Id;
-		var customer = CustomerFactory.CreateWithCart(merchantId);
+		var shopId = Constants.Shop.Id;
+		var customer = CustomerFactory.CreateWithCart(shopId);
 
 		// Act
 		var result = customer.ResetCart();
@@ -178,3 +178,5 @@ public class CustomerTests
 		customer.Cart.Should().BeNull();
 	}
 }
+
+

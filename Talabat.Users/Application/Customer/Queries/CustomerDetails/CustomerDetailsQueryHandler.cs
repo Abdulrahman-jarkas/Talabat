@@ -13,7 +13,7 @@ internal class CustomerDetailsQueryHandler(IUsersRepository usersRepository) : I
 			return null;
 
 		var cart = customer.Cart is null ? null : new CustomerCartResponse(
-			customer.Cart.MerchantId,
+			customer.Cart.ShopId,
 			customer.Cart.Items.Select(i => new CartItemResponse(i.ProductId, i.Quantity)).ToList());
 
 		var addresses = customer.Addresses

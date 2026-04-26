@@ -25,8 +25,8 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.HasColumnName("CustomerId")
 			.IsRequired();
 
-		builder.Property(cs => cs.MerchantId)
-			.HasColumnName("MerchantId")
+		builder.Property(cs => cs.ShopId)
+			.HasColumnName("ShopId")
 			.IsRequired();
 
 		builder.Property(cs => cs.AddressId)

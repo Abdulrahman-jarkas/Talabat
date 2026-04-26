@@ -7,20 +7,20 @@ namespace Talabat.Orders.Domain.OrderAggregate;
 
 internal class Order : AggregateRoot
 {
-    public Guid CustomerId { get; init; }
-    public Guid MerchantId { get; init; }
-    public Guid CheckoutSessionId { get; init; }
-    public Guid AddressId { get; init; }
+	public Guid CustomerId { get; init; }
+	public Guid ShopId { get; init; }
+	public Guid CheckoutSessionId { get; init; }
+	public Guid AddressId { get; init; }
 
-    public OrderStatus Status { get; private set; }
-    public Payment Payment { get; private set; }
+	public OrderStatus Status { get; private set; }
+	public Payment Payment { get; private set; }
 
-    private List<OrderItem> _items = new();
-    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+	private List<OrderItem> _items = new();
+	public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
 	internal Order(
 		Guid customerId,
-		Guid merchantId,
+		Guid shopId,
 		Payment payment,
 		Guid checkoutSessionId,
 		Guid addressId,
@@ -29,58 +29,58 @@ internal class Order : AggregateRoot
 		CheckoutSessionId = Guard.Against.Default(checkoutSessionId);
 		AddressId = Guard.Against.Default(addressId);
 		CustomerId = Guard.Against.Default(customerId);
-		MerchantId = Guard.Against.Default(merchantId);
+		ShopId = Guard.Against.Default(shopId);
 		Status = OrderStatus.FromStatusValue(OrderStatusValues.Placed);
 		Payment = Guard.Against.Null(payment);
 
 		foreach (var item in items)
 			_items.Add(OrderItem.Create(item.ProductId, item.Quantity));
 
-		_domainEvents.Add(new OrderPlacedEvent(Id, CustomerId, MerchantId, CheckoutSessionId,
+		_domainEvents.Add(new OrderPlacedEvent(Id, CustomerId, ShopId, CheckoutSessionId,
 			_items.Select(i => i.ProductId).ToList()));
 	}
 
-    public ErrorOr<Success> Ship()
-    {
-        var result = Status.Ship();
+	public ErrorOr<Success> Ship()
+	{
+		var result = Status.Ship();
 
-        if (result.IsError)
-            return result.Errors;
+		if (result.IsError)
+			return result.Errors;
 
-        Status = result.Value;
+		Status = result.Value;
 
-        _domainEvents.Add(new OrderShippedEvent(Id, MerchantId, CustomerId, _items.Select(i => i.ProductId).ToList()));
+		_domainEvents.Add(new OrderShippedEvent(Id, ShopId, CustomerId, _items.Select(i => i.ProductId).ToList()));
 
-        return Result.Success;
-    }
+		return Result.Success;
+	}
 
-    public ErrorOr<Success> Deliver()
-    {
-        var result = Status.Deliver();
+	public ErrorOr<Success> Deliver()
+	{
+		var result = Status.Deliver();
 
-        if (result.IsError)
-            return result.Errors;
+		if (result.IsError)
+			return result.Errors;
 
-        Status = result.Value;
+		Status = result.Value;
 
-        _domainEvents.Add(new OrderDeliveredEvent(Id, MerchantId, CustomerId));
+		_domainEvents.Add(new OrderDeliveredEvent(Id, ShopId, CustomerId));
 
-        return Result.Success;
-    }
+		return Result.Success;
+	}
 
-    public ErrorOr<Success> Cancel()
-    {
-        var result = Status.Cancel();
+	public ErrorOr<Success> Cancel()
+	{
+		var result = Status.Cancel();
 
-        if (result.IsError)
-            return result.Errors;
+		if (result.IsError)
+			return result.Errors;
 
-        Status = result.Value;
+		Status = result.Value;
 
-        _domainEvents.Add(new OrderCancelledEvent(Id, MerchantId, CustomerId, Payment.PaymentId));
+		_domainEvents.Add(new OrderCancelledEvent(Id, ShopId, CustomerId, Payment.PaymentId));
 
-        return Result.Success;
-    }
+		return Result.Success;
+	}
 
     public ErrorOr<Success> Refund()
     {
@@ -92,11 +92,11 @@ internal class Order : AggregateRoot
         if (res.IsError)
             return res.Errors;
 
-        _domainEvents.Add(new OrderRefundedEvent(Id, MerchantId, CustomerId));
+		_domainEvents.Add(new OrderRefundedEvent(Id, ShopId, CustomerId));
 
-        return Result.Success;
-    }
+		return Result.Success;
+	}
 
-    // for ef core
-    protected Order() { }
+	// for ef core
+	protected Order() { }
 }

@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using Talabat.Users.Domain.CustomerAggregate;
-using Talabat.Users.Domain.MerchantAggregate;
 
 namespace Talabat.Users.Data;
 
 public class UsersDbContext : DbContext
 {
-	internal DbSet<Merchant> Merchants { get; set; }
 	internal DbSet<Customer> Customers { get; set; }
 
 	public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options)

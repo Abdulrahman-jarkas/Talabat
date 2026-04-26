@@ -11,6 +11,7 @@ public class ProductsDbContext : DbContext
     private readonly IPublisher _publisher;
 
     internal DbSet<Product> Products { get; set; }
+    internal DbSet<Shop> Shops { get; set; }
 
     public ProductsDbContext(DbContextOptions<ProductsDbContext> options, IPublisher publisher) : base(options)
     {

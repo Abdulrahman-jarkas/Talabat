@@ -65,13 +65,13 @@ namespace Talabat.Orders.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("CustomerId");
 
-                    b.Property<Guid>("MerchantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("MerchantId");
-
                     b.Property<Guid?>("PaymentId")
                         .HasColumnType("uuid")
                         .HasColumnName("PaymentId");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ShopId");
 
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
@@ -98,6 +98,11 @@ namespace Talabat.Orders.Data.Migrations
                     b.Property<Guid>("CheckoutSessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
@@ -106,7 +111,7 @@ namespace Talabat.Orders.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("Items");
 
-                    b.Property<Guid>("MerchantId")
+                    b.Property<Guid>("ShopId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")
@@ -123,6 +128,9 @@ namespace Talabat.Orders.Data.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("IX_Orders_CustomerId");
+
+                    b.HasIndex("ShopId", "CreatedAt")
+                        .HasDatabaseName("IX_Orders_ShopId_CreatedAt");
 
                     b.ToTable("Orders", "Orders");
                 });

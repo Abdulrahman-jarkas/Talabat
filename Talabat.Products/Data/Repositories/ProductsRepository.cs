@@ -17,11 +17,11 @@ internal class ProductsRepository(ProductsDbContext context) : IProductsReposito
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<Product>> GetProductsByMerchantIdAsync(Guid merchantId, CancellationToken cancellationToken = default)
+	public async Task<IReadOnlyList<Product>> GetProductsByShopIdAsync(Guid shopId, CancellationToken cancellationToken = default)
 	{
 		return await context.Products
 			.AsNoTracking()
-			.Where(p => p.MerchantId == merchantId)
+			.Where(p => p.ShopId == shopId)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -30,10 +30,15 @@ internal class ProductsRepository(ProductsDbContext context) : IProductsReposito
 		await context.Products.AddAsync(product	, cancellationToken);
 	}
 
+	public async Task<int> CountByShopAsync(Guid shopId, CancellationToken cancellationToken = default)
+	{
+		return await context.Products
+			.Where(p => p.ShopId == shopId && !p.IsDeleted)
+			.CountAsync(cancellationToken);
+	}
+
 	public async Task SaveChangesAsync()
 	{
 		await context.SaveChangesAsync();
 	}
-
-	
 }

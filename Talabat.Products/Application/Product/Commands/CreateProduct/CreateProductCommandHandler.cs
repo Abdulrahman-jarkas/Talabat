@@ -10,7 +10,7 @@ internal class CreateProductCommandHandler(IProductsRepository productsRepositor
 	public async Task<ErrorOr<Guid>> Handle(CreateProductCommand command, CancellationToken cancellationToken)
 	{
 		var product = new Domain.Product(
-			command.MerchantId,
+			command.ShopId,
 			command.Title,
 			command.BasePrice,
 			command.Quantity);

@@ -33,12 +33,12 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		// Arrange
 		var productId = Constants.Product.Id;
 		var quantity = Constants.Product.DefaultQuantity;
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 
 		var productResponse = new ProductResponse(
 			productId,
 			Constants.Product.Title,
-			merchantId,
+			shopId,
 			Constants.Product.BasePrice,
 			100);
 
@@ -62,7 +62,7 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		customer.Cart!.Items.Should().HaveCount(1);
 		customer.Cart.Items.First().ProductId.Should().Be(productId);
 		customer.Cart.Items.First().Quantity.Should().Be(quantity);
-		customer.Cart.MerchantId.Should().Be(merchantId);
+		customer.Cart.ShopId.Should().Be(shopId);
 	}
 
 	[Fact]
@@ -72,10 +72,10 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 		var productId = Constants.Product.Id;
 		var initialQuantity = Constants.Product.DefaultQuantity;
 		var updatedQuantity = Constants.Product.UpdatedQuantity;
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 
 		// Setup product mock and add initial cart item
-		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, productId, shopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_handler, productId, initialQuantity);
 
 		// Act
@@ -115,21 +115,21 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 	}
 
 	[Fact]
-	public async Task AddCartItemAsync_WithDifferentMerchant_ShouldReturnMerchantMismatchError()
+	public async Task AddCartItemAsync_WithDifferentShop_ShouldReturnShopMismatchError()
 	{
 		// Arrange
 		var firstProductId = Constants.Product.Id;
 		var secondProductId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
-		var firstMerchantId = Constants.Merchant.Id;
-		var secondMerchantId = Guid.NewGuid();
+		var firstshopId = Constants.Shop.Id;
+		var secondshopId = Guid.NewGuid();
 
 		// Setup first product and add to cart
-		TestHelper.SetupProductQuery(_factory, firstProductId, firstMerchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, firstProductId, firstshopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_handler, firstProductId, quantity);
 
-		// Setup second product with different merchant
-		TestHelper.SetupProductQuery(_factory, secondProductId, secondMerchantId, Constants.Product.BasePrice);
+		// Setup second product with different Shop
+		TestHelper.SetupProductQuery(_factory, secondProductId, secondshopId, Constants.Product.BasePrice);
 
 		// Act
 		var result = await _handler.Handle(
@@ -139,6 +139,8 @@ public class AddCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetime
 
 		// Assert
 		result.IsError.Should().BeTrue();
-		result.FirstError.Code.Should().Be(CustomerErrors.MerchantMismatch.Code);
+		result.FirstError.Code.Should().Be(CustomerErrors.ShopMismatch.Code);
 	}
 }
+
+

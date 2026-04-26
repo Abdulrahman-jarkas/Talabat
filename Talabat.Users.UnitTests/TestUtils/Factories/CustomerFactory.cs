@@ -26,16 +26,16 @@ internal static class CustomerFactory
     }
 
     internal static Customer CreateWithCart(
-        Guid? merchantId = null,
+        Guid? shopId = null,
         string? email = null,
         Guid? id = null)
     {
         var customer = Create(email, id);
-        var merchant = merchantId ?? Constants.Merchant.Id;
+        var shop = shopId ?? Constants.Shop.Id;
         var productId = Constants.Product.Id;
         var quantity = Constants.Product.DefaultQuantity;
 
-        customer.SetCartItem(merchant, productId, quantity);
+        customer.SetCartItem(shop, productId, quantity);
 
         return customer;
     }
@@ -53,3 +53,5 @@ internal static class CustomerFactory
         return customer;
     }
 }
+
+

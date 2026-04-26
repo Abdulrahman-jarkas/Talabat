@@ -10,7 +10,7 @@ public record GetCheckoutSessionByPaymentIdQuery(Guid PaymentId) : IRequest<Erro
 public record CheckoutSessionResponse(
 	Guid Id,
 	Guid CustomerId,
-	Guid MerchantId,
+	Guid ShopId,
 	Guid AddressId,
 	IReadOnlyList<CheckoutSessionItemDto> Items,
 	decimal TotalPrice);

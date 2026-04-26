@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.Products.Application.Product.Commands.DeleteProduct;
+using Talabat.Products.Authorization;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Products.Endpoints;
 
@@ -19,13 +21,14 @@ public class DeleteProductValidator : Validator<DeleteProductRequest>
 	}
 }
 
+[RequiredPermission(ProductsPermissions.Delete)]
 internal class DeleteProductEndpoint(ISender sender)
 	: Endpoint<DeleteProductRequest>
 {
 	public override void Configure()
 	{
 		Delete("/api/products");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetPermissionPolicyName(ProductsPermissions.Delete));
 	}
 
 	public override async Task HandleAsync(DeleteProductRequest req, CancellationToken ct)

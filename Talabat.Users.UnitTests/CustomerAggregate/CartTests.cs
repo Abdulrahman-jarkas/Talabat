@@ -7,9 +7,9 @@ namespace Talabat.Users.UnitTests.CustomerAggregate;
 
 public class CartTests
 {
-    private static Cart CreateCart(Guid? merchantId = null)
+    private static Cart CreateCart(Guid? shopId = null)
     {
-        var merchant = merchantId ?? Constants.Merchant.Id;
+        var shop = shopId ?? Constants.Shop.Id;
 
         var constructor = typeof(Cart).GetConstructor(
             BindingFlags.NonPublic | BindingFlags.Instance,
@@ -20,21 +20,21 @@ public class CartTests
         if (constructor == null)
             throw new InvalidOperationException("Could not find Cart constructor");
 
-        return (Cart)constructor.Invoke(new object[] { merchant });
+        return (Cart)constructor.Invoke(new object[] { shop });
     }
 
     [Fact]
-    public void Create_WithValidMerchantId_ShouldCreateCart()
+    public void Create_WithValidshopId_ShouldCreateCart()
     {
         // Arrange
-        var merchantId = Constants.Merchant.Id;
+        var shopId = Constants.Shop.Id;
 
         // Act
-        var cart = CreateCart(merchantId);
+        var cart = CreateCart(shopId);
 
         // Assert
         cart.Should().NotBeNull();
-        cart.MerchantId.Should().Be(merchantId);
+        cart.ShopId.Should().Be(shopId);
         cart.Items.Should().BeEmpty();
     }
 
@@ -154,3 +154,5 @@ public class CartTests
         updatedCart.Items.First().ProductId.Should().Be(product2Id);
     }
 }
+
+

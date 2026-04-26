@@ -24,7 +24,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 			.IsConcurrencyToken();
 
 		builder.Property(o => o.CustomerId).IsRequired();
-		builder.Property(o => o.MerchantId).IsRequired();
+		builder.Property(o => o.ShopId).IsRequired();
 		builder.Property(o => o.CheckoutSessionId).IsRequired();
 		builder.Property(o => o.AddressId).IsRequired();
 
@@ -60,7 +60,15 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 				c => c.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
 				c => (IReadOnlyCollection<OrderItem>)new List<OrderItem>(c)));
 
+		// Shadow property for tracking creation time (used for daily order limits)
+		builder.Property<DateTime>("CreatedAt")
+			.HasDefaultValueSql("CURRENT_TIMESTAMP")
+			.ValueGeneratedOnAdd();
+
 		builder.HasIndex(o => o.CustomerId)
 			.HasDatabaseName("IX_Orders_CustomerId");
+
+		builder.HasIndex("ShopId", "CreatedAt")
+			.HasDatabaseName("IX_Orders_ShopId_CreatedAt");
 	}
 }

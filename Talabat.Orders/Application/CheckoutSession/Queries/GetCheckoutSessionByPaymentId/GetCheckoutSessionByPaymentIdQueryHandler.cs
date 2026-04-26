@@ -30,7 +30,7 @@ internal class GetCheckoutSessionByPaymentIdQueryHandler(ICheckoutSessionReposit
 		return new CheckoutSessionResponse(
 			checkoutSession.Id,
 			checkoutSession.CustomerId,
-			checkoutSession.MerchantId,
+			checkoutSession.ShopId,
 			checkoutSession.AddressId,
 			items,
 			checkoutSession.TotalPrice);

@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 using Talabat.Users.Application.Customer.Commands.RemoveCartItem;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Users.Endpoints;
 
@@ -21,13 +23,14 @@ public class RemoveCartItemValidator : Validator<RemoveCartItemRequest>
 	}
 }
 
+[RequiredRole(AuthRoles.Customer)]
 internal class RemoveCartItemEndpoint(ISender sender)
 	: Endpoint<RemoveCartItemRequest>
 {
 	public override void Configure()
 	{
 		Delete("/api/cart/items");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(RemoveCartItemRequest req, CancellationToken ct)

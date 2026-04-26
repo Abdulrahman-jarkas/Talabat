@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Talabat.Orders.Application.BackgroundServices;
+using Talabat.Orders.Authorization;
 using Talabat.Orders.Data;
 using Talabat.Orders.Data.Repositories;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Orders;
 
@@ -12,9 +14,13 @@ public static class DependencyInjection
 {
 	public static IServiceCollection AddOrdersInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
+		// Register plan configuration
+		OrdersPlanConfiguration.Register();
+
 		services.AddPersistence(configuration)
 			.AddMediatR()
 			.AddBackgroundServices()
+			.AddAuthorization()
 			.AddEndpoints();
 
 		return services;
@@ -43,6 +49,13 @@ public static class DependencyInjection
 	private static IServiceCollection AddBackgroundServices(this IServiceCollection services)
 	{
 		services.AddHostedService<CheckoutSessionExpirationService>();
+
+		return services;
+	}
+
+	private static IServiceCollection AddAuthorization(this IServiceCollection services)
+	{
+		services.AddPlanLimitService<OrdersPlanLimitService>();
 
 		return services;
 	}

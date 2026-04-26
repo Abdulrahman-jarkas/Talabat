@@ -9,7 +9,7 @@ public record CustomerDetailsResponse(
 	IReadOnlyList<CustomerAddressResponse> Addresses);
 
 public record CustomerCartResponse(
-	Guid MerchantId,
+	Guid ShopId,
 	IReadOnlyList<CartItemResponse> Items);
 
 public record CartItemResponse(Guid ProductId, int Quantity);

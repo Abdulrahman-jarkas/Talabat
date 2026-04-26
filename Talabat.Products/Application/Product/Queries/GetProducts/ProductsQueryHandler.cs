@@ -17,7 +17,7 @@ internal class ProductsQueryHandler(IProductsRepository productsRepository) : IR
 			.Select(p => new ProductResponse(
 				p.Id,
 				p.Title,
-				p.MerchantId,
+				p.ShopId,
 				p.BasePrice,
 				p.Stock.EffectiveQuantity))
 			.ToList();

@@ -27,13 +27,13 @@ internal class Customer : AggregateRoot
 		return Result.Success;
 	}
 
-	public ErrorOr<Updated> SetCartItem(Guid productOwner, Guid productId, int quantity)
+	public ErrorOr<Updated> SetCartItem(Guid shopId, Guid productId, int quantity)
 	{
 		if (Cart is null)
-			Cart = new CartEntity(productOwner);
+			Cart = new CartEntity(shopId);
 
-		if (Cart.MerchantId != productOwner)
-			return CustomerErrors.MerchantMismatch;
+		if (Cart.ShopId != shopId)
+			return CustomerErrors.ShopMismatch;
 
 		var result = Cart.SetCartItem(productId, quantity);
 		if (result.IsError)

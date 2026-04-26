@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.Products.Application.Product.Commands.UpdateProduct;
+using Talabat.Products.Authorization;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Products.Endpoints;
 
@@ -23,13 +25,14 @@ public class UpdateProductValidator : Validator<UpdateProductRequest>
 	}
 }
 
+[RequiredPermission(ProductsPermissions.Update)]
 internal class UpdateProductEndpoint(ISender sender)
 	: Endpoint<UpdateProductRequest>
 {
 	public override void Configure()
 	{
 		Put("/api/products");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetPermissionPolicyName(ProductsPermissions.Update));
 	}
 
 	public override async Task HandleAsync(UpdateProductRequest req, CancellationToken ct)

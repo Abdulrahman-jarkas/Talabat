@@ -46,13 +46,13 @@ internal static class TestHelper
 	internal static void SetupProductQuery(
 		UsersApiFactory factory,
 		Guid productId,
-		Guid merchantId,
+		Guid shopId,
 		decimal price)
 	{
 		var productResponse = new ProductResponse(
 			productId,
 			Constants.Product.Title,
-			merchantId,
+			shopId,
 			price,
 			100);
 

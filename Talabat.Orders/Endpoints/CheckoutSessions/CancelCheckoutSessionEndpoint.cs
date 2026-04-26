@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.CheckoutSession.Commands.CancelCheckoutSession;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Orders.Endpoints.CheckoutSessions;
 
@@ -19,13 +21,14 @@ public class CancelCheckoutSessionValidator : Validator<CancelCheckoutSessionReq
 	}
 }
 
+[RequiredRole(AuthRoles.Customer)]
 internal class CancelCheckoutSessionEndpoint(ISender sender)
 	: Endpoint<CancelCheckoutSessionRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/checkout-sessions/cancel");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(CancelCheckoutSessionRequest req, CancellationToken ct)

@@ -16,7 +16,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
 			.IsRequired()
 			.ValueGeneratedNever();
 
-		builder.Property(p => p.MerchantId).IsRequired();
+		builder.Property(p => p.ShopId).IsRequired();
 		builder.Property(p => p.Title).IsRequired().HasMaxLength(256);
 		builder.Property(p => p.BasePrice).HasPrecision(18, 2).IsRequired();
 		builder.Property(p => p.IsDeleted).IsRequired().HasDefaultValue(false);

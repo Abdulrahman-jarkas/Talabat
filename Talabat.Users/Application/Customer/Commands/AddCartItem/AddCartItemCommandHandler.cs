@@ -24,7 +24,7 @@ internal class AddCartItemCommandHandler(
 		if (product.Quantity < command.Quantity)
 			return CartErrors.InsufficientStock(command.ProductId);
 
-		var setCartResult = customer.SetCartItem(product.Merchant, command.ProductId, command.Quantity);
+		var setCartResult = customer.SetCartItem(product.ShopId, command.ProductId, command.Quantity);
 		if (setCartResult.IsError)
 			return setCartResult.Errors;
 

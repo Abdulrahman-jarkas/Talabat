@@ -2,7 +2,10 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.Order.Commands.CancelOrder;
+using Talabat.Orders.Authorization;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Orders.Endpoints.Orders;
 
@@ -19,13 +22,16 @@ public class CancelOrderValidator : Validator<CancelOrderRequest>
 	}
 }
 
+[RequiredPermission(OrdersPermissions.Cancel)]
+[RequiredRole(AuthRoles.Customer)]
 internal class CancelOrderEndpoint(ISender sender)
 	: Endpoint<CancelOrderRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/orders/cancel");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetPermissionPolicyName(OrdersPermissions.Cancel),
+		         AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(CancelOrderRequest req, CancellationToken ct)

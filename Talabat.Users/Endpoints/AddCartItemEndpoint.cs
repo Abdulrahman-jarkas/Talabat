@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 using Talabat.Users.Application.Customer.Commands.AddCartItem;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Users.Endpoints;
 
@@ -23,13 +25,14 @@ public class AddCartItemValidator : Validator<AddCartItemRequest>
 	}
 }
 
+[RequiredRole(AuthRoles.Customer)]
 internal class AddCartItemEndpoint(ISender sender)
 	: Endpoint<AddCartItemRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/cart/items");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(AddCartItemRequest req, CancellationToken ct)

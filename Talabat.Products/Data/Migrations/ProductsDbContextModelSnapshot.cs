@@ -37,7 +37,7 @@ namespace Talabat.Products.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<Guid>("MerchantId")
+                    b.Property<Guid>("ShopId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -48,6 +48,21 @@ namespace Talabat.Products.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Products", "Products");
+                });
+
+            modelBuilder.Entity("Talabat.Products.Domain.Shop", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Shops", "Products");
                 });
 
             modelBuilder.Entity("Talabat.Products.Domain.Product", b =>

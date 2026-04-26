@@ -11,7 +11,7 @@ internal class CheckoutSession : AggregateRoot
 	public IReadOnlyCollection<CheckoutItem> Items => _items.AsReadOnly();
 
 	public Guid CustomerId { get; private set; }
-	public Guid MerchantId { get; private set; }
+	public Guid ShopId { get; private set; }
 	public Guid AddressId { get; private set; }
 	public CheckoutSessionLifetime Lifetime { get; private set; }
 	public Guid? PaymentId { get; private set; }
@@ -20,13 +20,13 @@ internal class CheckoutSession : AggregateRoot
 
 	internal CheckoutSession(
 		Guid customerId,
-		Guid merchantId,
+		Guid shopId,
 		IEnumerable<CheckoutItem> items,
 		Guid? id = null)
 		: base(id ?? Guid.NewGuid())
 	{
 		CustomerId = Guard.Against.Default(customerId, nameof(customerId));
-		MerchantId = Guard.Against.Default(merchantId, nameof(merchantId));
+		ShopId = Guard.Against.Default(shopId, nameof(shopId));
 
 		Guard.Against.NullOrEmpty(items, nameof(items));
 		_items.AddRange(items);
@@ -89,7 +89,7 @@ internal class CheckoutSession : AggregateRoot
 		_domainEvents.Add(new CheckoutSessionCompletedEvent(
 			Id,
 			CustomerId,
-			MerchantId,
+			ShopId,
 			PaymentId!.Value,
 			AddressId,
 			_items.Select(i => new CheckoutCompletedItem(i.ProductId, i.Quantity)).ToList()));

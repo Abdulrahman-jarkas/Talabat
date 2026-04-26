@@ -5,7 +5,7 @@ namespace Talabat.Orders.Domain.CheckoutSessionAggregate.Events;
 public record CheckoutSessionCompletedEvent(
 	Guid CheckoutSessionId,
 	Guid CustomerId,
-	Guid MerchantId,
+	Guid ShopId,
 	Guid PaymentId,
 	Guid AddressId,
 	IReadOnlyList<CheckoutCompletedItem> Items) : IDomainEvent;

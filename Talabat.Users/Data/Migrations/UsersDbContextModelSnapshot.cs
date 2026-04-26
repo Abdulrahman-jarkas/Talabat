@@ -66,21 +66,6 @@ namespace Talabat.Users.Data.Migrations
                     b.ToTable("CustomerAddresses", "Users");
                 });
 
-            modelBuilder.Entity("Talabat.Users.Domain.MerchantAggregate.Merchant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Merchants", "Users");
-                });
-
             modelBuilder.Entity("Talabat.Users.Domain.CustomerAggregate.CustomerAddress", b =>
                 {
                     b.HasOne("Talabat.Users.Domain.CustomerAggregate.Customer", null)

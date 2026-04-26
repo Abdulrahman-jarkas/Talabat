@@ -16,7 +16,7 @@ internal class ProductQueryHandler(IProductsRepository productsRepository) : IRe
 		return new ProductResponse(
 			productResult.Id,
 			productResult.Title,
-			productResult.MerchantId,
+			productResult.ShopId,
 			productResult.BasePrice,
 			productResult.Stock.EffectiveQuantity);
 	}

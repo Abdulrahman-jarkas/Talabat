@@ -51,7 +51,7 @@ internal class CreateCheckoutSessionCommandHandler(
 		}
 
 		// 4. Create checkout session aggregate
-		var checkoutSession = new CheckoutSessionAggregate.CheckoutSession(command.CustomerId, customerDetails.Cart.MerchantId, checkoutItems);
+		var checkoutSession = new CheckoutSessionAggregate.CheckoutSession(command.CustomerId, customerDetails.Cart.ShopId, checkoutItems);
 
 		await checkoutSessionRepository.AddAsync(checkoutSession, cancellationToken);
 		await checkoutSessionRepository.SaveChangesAsync(cancellationToken);

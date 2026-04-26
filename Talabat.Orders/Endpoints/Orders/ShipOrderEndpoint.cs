@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.Order.Commands.ShipOrder;
+using Talabat.Orders.Authorization;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Orders.Endpoints.Orders;
 
@@ -19,13 +21,14 @@ public class ShipOrderValidator : Validator<ShipOrderRequest>
 	}
 }
 
+[RequiredPermission(OrdersPermissions.Ship)]
 internal class ShipOrderEndpoint(ISender sender)
 	: Endpoint<ShipOrderRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/orders/ship");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetPermissionPolicyName(OrdersPermissions.Ship));
 	}
 
 	public override async Task HandleAsync(ShipOrderRequest req, CancellationToken ct)

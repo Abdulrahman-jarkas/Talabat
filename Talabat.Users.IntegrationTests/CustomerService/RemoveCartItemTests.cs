@@ -37,10 +37,10 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		// Arrange
 		var productId = Constants.Product.Id;
 		var quantity = Constants.Product.DefaultQuantity;
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 
 		// Set up product mock and add to cart
-		TestHelper.SetupProductQuery(_factory, productId, merchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, productId, shopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_addHandler, productId, quantity);
 
 		// Act
@@ -67,10 +67,10 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		var existingProductId = Constants.Product.Id;
 		var nonExistentProductId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 
 		// First, create a cart with one item
-		TestHelper.SetupProductQuery(_factory, existingProductId, merchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, existingProductId, shopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_addHandler, existingProductId, quantity);
 
 		// Act - Try to remove a different product that doesn't exist in the cart
@@ -91,13 +91,13 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		var firstProductId = Constants.Product.Id;
 		var secondProductId = Constants.Product.AlternativeId;
 		var quantity = Constants.Product.DefaultQuantity;
-		var merchantId = Constants.Merchant.Id;
+		var shopId = Constants.Shop.Id;
 
 		// Set up both products and add to cart
-		TestHelper.SetupProductQuery(_factory, firstProductId, merchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, firstProductId, shopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_addHandler, firstProductId, quantity);
 
-		TestHelper.SetupProductQuery(_factory, secondProductId, merchantId, Constants.Product.BasePrice);
+		TestHelper.SetupProductQuery(_factory, secondProductId, shopId, Constants.Product.BasePrice);
 		await TestHelper.AddProductToCartAsync(_addHandler, secondProductId, quantity);
 
 		// Act
@@ -117,3 +117,4 @@ public class RemoveCartItemTests : IClassFixture<UsersApiFactory>, IAsyncLifetim
 		customer.Cart.Items.First().ProductId.Should().Be(secondProductId);
 	}
 }
+

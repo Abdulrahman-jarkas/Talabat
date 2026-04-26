@@ -2,7 +2,9 @@ using FastEndpoints;
 using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.Order.Commands.DeliverOrder;
+using Talabat.Orders.Authorization;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Orders.Endpoints.Orders;
 
@@ -19,13 +21,14 @@ public class DeliverOrderValidator : Validator<DeliverOrderRequest>
 	}
 }
 
+[RequiredPermission(OrdersPermissions.Deliver)]
 internal class DeliverOrderEndpoint(ISender sender)
 	: Endpoint<DeliverOrderRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/orders/deliver");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetPermissionPolicyName(OrdersPermissions.Deliver));
 	}
 
 	public override async Task HandleAsync(DeliverOrderRequest req, CancellationToken ct)

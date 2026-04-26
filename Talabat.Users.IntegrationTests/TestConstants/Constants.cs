@@ -8,10 +8,10 @@ public static class Constants
         public static readonly string Email = "customer@test.com";
     }
 
-    public static class Merchant
+    public static class Shop
     {
         public static readonly Guid Id = Guid.Parse("1fb673f4-6974-478b-b4eb-b9882dd13c5c");
-        public static readonly string Email = "merchant@test.com";
+        public static readonly string Name = "Test Shop";
     }
 
     public static class Product

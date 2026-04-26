@@ -7,15 +7,15 @@ namespace Talabat.Products.Domain;
 
 internal class Product : AggregateRoot
 {
-    public Guid MerchantId { get; init; }
+    public Guid ShopId { get; init; }
     public string Title { get; private set; } = string.Empty;
     public decimal BasePrice { get; private set; }
     public Stock Stock { get; private set; }
     public bool IsDeleted { get; private set; }
 
-    internal Product(Guid merchantId, string title, decimal basePrice, int quantity = 0, Guid? id = null) : base(id ?? Guid.NewGuid())
+    internal Product(Guid shopId, string title, decimal basePrice, int quantity = 0, Guid? id = null) : base(id ?? Guid.NewGuid())
     {
-        MerchantId = Guard.Against.Default(merchantId, nameof(merchantId));
+        ShopId = Guard.Against.Default(shopId, nameof(shopId));
         Title = Guard.Against.NullOrEmpty(title, nameof(title));
         BasePrice = Guard.Against.NegativeOrZero(basePrice);
         Stock = Stock.Create(quantity);

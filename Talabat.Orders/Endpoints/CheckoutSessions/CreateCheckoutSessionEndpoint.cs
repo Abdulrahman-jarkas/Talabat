@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.CheckoutSession.Commands.CreateCheckoutSession;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
+using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Orders.Endpoints.CheckoutSessions;
 
@@ -19,13 +21,15 @@ public class CreateCheckoutSessionValidator : Validator<CreateCheckoutSessionReq
 	}
 }
 
+[RequiredRole(AuthRoles.Customer)]
+//[EnforcePlanLimit(Features.OrdersPerDay)]
 internal class CreateCheckoutSessionEndpoint(ISender sender)
 	: Endpoint<CreateCheckoutSessionRequest>
 {
 	public override void Configure()
 	{
 		Post("/api/checkout-sessions");
-		AllowAnonymous();
+		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
 	public override async Task HandleAsync(CreateCheckoutSessionRequest req, CancellationToken ct)
