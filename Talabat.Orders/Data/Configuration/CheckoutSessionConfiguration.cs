@@ -16,9 +16,8 @@ internal class CheckoutSessionConfiguration : IEntityTypeConfiguration<CheckoutS
 			.IsRequired()
 			.ValueGeneratedNever();
 
-		builder.Property<uint>("xmin")
-			.HasColumnType("xid")
-			.ValueGeneratedOnAddOrUpdate()
+		builder.Property<byte[]>("RowVersion")
+			.IsRowVersion()
 			.IsConcurrencyToken();
 
 		builder.Property(cs => cs.CustomerId)

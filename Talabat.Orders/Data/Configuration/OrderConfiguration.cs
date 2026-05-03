@@ -18,9 +18,8 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 			.IsRequired()
 			.ValueGeneratedNever();
 
-		builder.Property<uint>("xmin")
-			.HasColumnType("xid")
-			.ValueGeneratedOnAddOrUpdate()
+		builder.Property<byte[]>("RowVersion")
+			.IsRowVersion()
 			.IsConcurrencyToken();
 
 		builder.Property(o => o.CustomerId).IsRequired();
@@ -51,7 +50,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 			.HasConversion(
 				v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
 				v => (IReadOnlyCollection<OrderItem>)(JsonSerializer.Deserialize<List<OrderItem>>(v, (JsonSerializerOptions?)null) ?? new List<OrderItem>()))
-			.HasColumnType("jsonb")
+			.HasColumnType("nvarchar(max)")
 			.HasColumnName("Items");
 
 		builder.Property(o => o.Items)
@@ -62,7 +61,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 
 		// Shadow property for tracking creation time (used for daily order limits)
 		builder.Property<DateTime>("CreatedAt")
-			.HasDefaultValueSql("CURRENT_TIMESTAMP")
+			.HasDefaultValueSql("GETUTCDATE()")
 			.ValueGeneratedOnAdd();
 
 		builder.HasIndex(o => o.CustomerId)

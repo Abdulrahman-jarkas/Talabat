@@ -16,6 +16,10 @@ internal class CancelCheckoutSessionCommandHandler(ICheckoutSessionRepository ch
 		if (session is null)
 			return CheckoutSessionErrors.NotFound;
 
+		// Verify the checkout session belongs to the requesting customer
+		if (session.CustomerId != command.CustomerId)
+			return CheckoutSessionErrors.NotFound;
+
 		var result = session.Cancel();
 		if (result.IsError)
 			return result.Errors;

@@ -12,17 +12,15 @@ using NSubstitute;
 using Talabat.Payments.Contracts;
 using Talabat.Products.Contracts;
 using Talabat.Users.Data;
-using Testcontainers.PostgreSql;
+using Testcontainers.MsSql;
 using Xunit;
 
 namespace Talabat.Users.IntegrationTests.Infrastructure;
 
 public class UsersApiFactory : IAsyncLifetime
 {
-	private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-		.WithDatabase("usersdb")
-		.WithUsername("testuser")
-		.WithPassword("testpass")
+	private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
+		.WithPassword("YourStrong@Passw0rd")
 		.Build();
 
 	public UsersDbContext DbContext { get; private set; } = null!;
@@ -33,7 +31,7 @@ public class UsersApiFactory : IAsyncLifetime
 		await _dbContainer.StartAsync();
 
 		var options = new DbContextOptionsBuilder<UsersDbContext>()
-			.UseNpgsql(_dbContainer.GetConnectionString())
+			.UseSqlServer(_dbContainer.GetConnectionString())
 			.Options;
 
 		DbContext = new UsersDbContext(options);
@@ -104,8 +102,8 @@ public class UsersApiFactory : IAsyncLifetime
 
 		// Create a fresh customer in initial state
 		var customer = new Talabat.Users.Domain.CustomerAggregate.Customer(
-			TestConstants.Constants.Customer.Email,
-			TestConstants.Constants.Customer.Id);
+			TestConstants.Constants.Customer.Id,
+			TestConstants.Constants.Customer.Email);
 
 		DbContext.Customers.Add(customer);
 		await DbContext.SaveChangesAsync();

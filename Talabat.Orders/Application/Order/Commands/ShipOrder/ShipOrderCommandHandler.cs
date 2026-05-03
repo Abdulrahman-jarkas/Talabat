@@ -16,6 +16,10 @@ internal class ShipOrderCommandHandler(IOrdersRepository ordersRepository)
 		if (order is null)
 			return OrderErrors.NotFound;
 
+		// Verify the order belongs to the requesting shop
+		if (order.ShopId != command.ShopId)
+			return OrderErrors.NotFound;
+
 		var result = order.Ship();
 		if (result.IsError)
 			return result.Errors;

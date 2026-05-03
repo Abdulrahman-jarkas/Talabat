@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
 using MediatR;
 using Talabat.Orders.Application.CheckoutSession.Commands.CreateCheckoutSession;
 using Talabat.SharedKernal;
@@ -8,23 +7,10 @@ using AuthRoles = Talabat.SharedKernal.Authorization.Roles;
 
 namespace Talabat.Orders.Endpoints.CheckoutSessions;
 
-public class CreateCheckoutSessionRequest
-{
-	public Guid CustomerId { get; set; }
-}
-
-public class CreateCheckoutSessionValidator : Validator<CreateCheckoutSessionRequest>
-{
-	public CreateCheckoutSessionValidator()
-	{
-		RuleFor(x => x.CustomerId).NotEmpty();
-	}
-}
-
 [RequiredRole(AuthRoles.Customer)]
 //[EnforcePlanLimit(Features.OrdersPerDay)]
-internal class CreateCheckoutSessionEndpoint(ISender sender)
-	: Endpoint<CreateCheckoutSessionRequest>
+internal class CreateCheckoutSessionEndpoint(ISender sender, IAccountContext accountContext)
+	: EndpointWithoutRequest
 {
 	public override void Configure()
 	{
@@ -32,10 +18,18 @@ internal class CreateCheckoutSessionEndpoint(ISender sender)
 		Policies(AuthorizationPolicyProvider.GetRolePolicyName(AuthRoles.Customer));
 	}
 
-	public override async Task HandleAsync(CreateCheckoutSessionRequest req, CancellationToken ct)
+	public override async Task HandleAsync(CancellationToken ct)
 	{
+		// Customer ID is the Account ID from the token
+		var customerId = accountContext.AccountId;
+		if (customerId is null)
+		{
+			HttpContext.Response.StatusCode = 401;
+			return;
+		}
+
 		var result = await sender.Send(
-			new CreateCheckoutSessionCommand(req.CustomerId), ct);
+			new CreateCheckoutSessionCommand(customerId.Value), ct);
 
 		var (response, statusCode) = result.ToApiResult();
 		await HttpContext.Response.SendAsync(response, statusCode);

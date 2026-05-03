@@ -14,13 +14,14 @@ public static class AuthorizationServiceExtensions
     /// </summary>
     public static IServiceCollection AddSharedAuthorization(this IServiceCollection services)
     {
-        // Register tenant context for accessing JWT claims
-        services.AddScoped<ITenantContext, TenantContext>();
+        // Register per-request account context (identity + authorization data)
+        services.AddScoped<IAccountContext, AccountContext>();
 
-        // Register authorization handlers
-        services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
-        services.AddSingleton<IAuthorizationHandler, PlanFeatureHandler>();
-        services.AddSingleton<IAuthorizationHandler, RoleHandler>();
+        // Register authorization handlers (scoped — they depend on scoped AccountAuthorizationContext)
+        services.AddScoped<IAuthorizationHandler, AccountVersionHandler>();
+        services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+        services.AddScoped<IAuthorizationHandler, PlanFeatureHandler>();
+        services.AddScoped<IAuthorizationHandler, RoleHandler>();
 
         // Register dynamic policy provider
         services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();

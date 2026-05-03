@@ -22,7 +22,7 @@ public static class DependencyInjection
 	{
 		services.AddDbContext<UsersDbContext>(cfg =>
 		{
-			cfg.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+			cfg.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 		});
 
 		services.AddScoped<IUsersRepository, UsersRepository>();

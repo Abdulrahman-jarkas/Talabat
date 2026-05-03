@@ -21,6 +21,10 @@ internal class CheckoutCommandHandler(
 		if (checkoutSession is null)
 			return CheckoutSessionErrors.NotFound;
 
+		// 2. Verify the checkout session belongs to the requesting customer
+		if (checkoutSession.CustomerId != command.CustomerId)
+			return CheckoutSessionErrors.NotFound;
+
 		if (checkoutSession.Lifetime.IsExpired)
 			return CheckoutSessionErrors.SessionExpired;
 

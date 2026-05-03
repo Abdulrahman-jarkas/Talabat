@@ -16,13 +16,13 @@ internal static class CustomerFactory
         var constructor = typeof(Customer).GetConstructor(
             BindingFlags.NonPublic | BindingFlags.Instance,
             null,
-            new[] { typeof(string), typeof(Guid?) },
+            new[] { typeof(Guid), typeof(string) },
             null);
 
         if (constructor == null)
             throw new InvalidOperationException("Could not find Customer constructor");
 
-        return (Customer)constructor.Invoke(new object?[] { customerEmail, customerId });
+        return (Customer)constructor.Invoke(new object?[] { customerId, customerEmail });
     }
 
     internal static Customer CreateWithCart(

@@ -15,8 +15,9 @@ internal class Customer : AggregateRoot
 	private readonly List<CustomerAddress> _addresses = new();
 	public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
 
-	internal Customer(string email, Guid? id = null) : base(id ?? Guid.NewGuid())
+	internal Customer(Guid id, string email) : base(id)
 	{
+		Guard.Against.Default(id, nameof(id));
 		Email = Guard.Against.NullOrEmpty(email, nameof(email));
 	}
 

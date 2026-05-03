@@ -50,4 +50,9 @@ public static class AuthorizationClaimTypes
     /// Claim type for account security stamp hash (for token invalidation).
     /// </summary>
     public const string AccountStamp = "account_stamp";
+
+    /// <summary>
+    /// Claim type for account version (base64 rowversion, used to detect stale tokens).
+    /// </summary>
+    public const string AccountVersion = "account_version";
 }

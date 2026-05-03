@@ -25,7 +25,7 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
         {
             var permission = policyName[PermissionPolicyPrefix.Length..];
             var policy = new AuthorizationPolicyBuilder()
-                .AddRequirements(new PermissionRequirement(permission))
+                .AddRequirements(new AccountVersionRequirement(), new PermissionRequirement(permission))
                 .Build();
             return Task.FromResult<AuthorizationPolicy?>(policy);
         }
@@ -34,7 +34,7 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
         {
             var feature = policyName[PlanFeaturePolicyPrefix.Length..];
             var policy = new AuthorizationPolicyBuilder()
-                .AddRequirements(new PlanFeatureRequirement(feature))
+                .AddRequirements(new AccountVersionRequirement(), new PlanFeatureRequirement(feature))
                 .Build();
             return Task.FromResult<AuthorizationPolicy?>(policy);
         }
@@ -43,7 +43,7 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
         {
             var role = policyName[RolePolicyPrefix.Length..];
             var policy = new AuthorizationPolicyBuilder()
-                .AddRequirements(new RoleRequirement(role))
+                .AddRequirements(new AccountVersionRequirement(), new RoleRequirement(role))
                 .Build();
             return Task.FromResult<AuthorizationPolicy?>(policy);
         }

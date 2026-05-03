@@ -1,7 +1,8 @@
-using System.Security.Claims;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Talabat.Api.Middleware;
@@ -11,133 +12,120 @@ using Talabat.Products;
 using Talabat.Products.Data;
 using Talabat.SharedKernal;
 using Talabat.SharedKernal.Authorization;
+using Talabat.Accounts;
+using Talabat.Accounts.Data;
 using Talabat.Users;
 using Talabat.Users.Data;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
-	.WriteTo.Console()
-	.CreateBootstrapLogger();
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 try
 {
-	var builder = WebApplication.CreateBuilder(args);
+    var builder = WebApplication.CreateBuilder(args);
 
-	// Configure Serilog from appsettings
-	builder.Host.UseSerilog((context, services, configuration) => configuration
-		.ReadFrom.Configuration(context.Configuration)
-		.ReadFrom.Services(services)
-		.Enrich.FromLogContext()
-		.WriteTo.Console());
+    // Configure Serilog from appsettings
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console());
 
-	// Configure JWT Bearer Authentication
-	var identityServerAuthority = builder.Configuration["IdentityServer:Authority"]
-		?? throw new InvalidOperationException("IdentityServer:Authority configuration is required.");
+    // Configure JWT Authentication
+    var authority = builder.Configuration["Authentication:Authority"]!;
 
-	builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-		.AddJwtBearer(options =>
-		{
-			options.Authority = identityServerAuthority;
-			options.Audience = "talabat.api";
-			options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Audience = "talabat.api";
 
-			options.TokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateIssuer = true,
-				ValidateAudience = true,
-				ValidateLifetime = true,
-				ValidateIssuerSigningKey = true,
-				ClockSkew = TimeSpan.FromSeconds(30),
-				NameClaimType = "name",
-				RoleClaimType = AuthorizationClaimTypes.Role
-			};
+        if (builder.Environment.IsDevelopment())
+        {
+            // Fetch JWKS manually for development (handles self-signed certs)
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+            var httpClient = new HttpClient(handler);
+            var jwksJson = httpClient.GetStringAsync($"{authority}/.well-known/openid-configuration/jwks").GetAwaiter().GetResult();
+            var jsonWebKeySet = new JsonWebKeySet(jwksJson);
 
-			options.Events = new JwtBearerEvents
-			{
-				OnAuthenticationFailed = context =>
-				{
-					Log.Warning(
-						context.Exception,
-						"Authentication failed for request {Path}",
-						context.Request.Path);
-					return Task.CompletedTask;
-				},
-				OnTokenValidated = context =>
-				{
-					var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-					var tenantType = context.Principal?.FindFirstValue(AuthorizationClaimTypes.TenantType);
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = authority,
+                ValidateAudience = true,
+                ValidAudience = "talabat.api",
+                ValidateLifetime = true,
+                NameClaimType = "name",
+                RoleClaimType = AuthorizationClaimTypes.Role,
+                IssuerSigningKeys = jsonWebKeySet.GetSigningKeys()
+            };
+        }
+        else
+        {
+            // Production: use standard Authority-based discovery
+            options.Authority = authority;
+            options.TokenValidationParameters.NameClaimType = "name";
+            options.TokenValidationParameters.RoleClaimType = AuthorizationClaimTypes.Role;
+        }
+    });
 
-					Log.Debug(
-						"Token validated for user {UserId} with tenant type {TenantType}",
-						userId,
-						tenantType);
-					return Task.CompletedTask;
-				},
-				OnChallenge = context =>
-				{
-					Log.Warning(
-						"Authentication challenge for request {Path}: {Error} - {ErrorDescription}",
-						context.Request.Path,
-						context.Error,
-						context.ErrorDescription);
-					return Task.CompletedTask;
-				}
-			};
-		});
+    // Register shared authorization infrastructure
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddAuthorization();
+    builder.Services.AddSharedAuthorization();
 
-	// Register shared authorization infrastructure
-	builder.Services.AddHttpContextAccessor();
-	builder.Services.AddAuthorization();
-	builder.Services.AddSharedAuthorization();
+    // Register module services
+    builder.Services.AddOrdersInfrastructure(builder.Configuration);
+    builder.Services.AddProductsInfrastructure(builder.Configuration);
+    builder.Services.AddPaymentsInfrastructure(builder.Configuration);
+    builder.Services.AddUsersInfrastructure(builder.Configuration);
+    builder.Services.AddAccountsInfrastructure(builder.Configuration);
 
-	// Register module services
-	builder.Services.AddOrdersInfrastructure(builder.Configuration);
-	builder.Services.AddProductsInfrastructure(builder.Configuration);
-	builder.Services.AddPaymentsInfrastructure(builder.Configuration);
-	builder.Services.AddUsersInfrastructure(builder.Configuration);
+    // Register FastEndpoints
+    builder.Services
+        .AddFastEndpoints(o => o.Assemblies = [.. EndpointAssemblyRegistry.Assemblies])
+        .SwaggerDocument(o =>
+        {
+            o.DocumentSettings = s =>
+            {
+                s.Title = "Talabat API";
+                s.Version = "v1";
+                s.Description = "Talabat Modular Monolith API";
+            };
+        });
 
-	// Register FastEndpoints — assemblies are registered by each module's DI
-	builder.Services
-		.AddFastEndpoints(o => o.Assemblies = [.. EndpointAssemblyRegistry.Assemblies])
-		.SwaggerDocument(o =>
-		{
-			o.DocumentSettings = s =>
-			{
-				s.Title = "Talabat API";
-				s.Version = "v1";
-				s.Description = "Talabat Modular Monolith API";
-			};
-		});
+    var app = builder.Build();
 
-	var app = builder.Build();
+    app.UseSerilogRequestLogging();
+    app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-	app.UseSerilogRequestLogging();
+    app.UseFastEndpoints(c =>
+    {
+        c.Serializer.Options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
-	app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+    app.UseSwaggerGen();
 
-	app.UseAuthentication();
-	app.UseAuthorization();
+    if (app.Environment.IsDevelopment())
+    {
+        await app.Services.SeedUsersDataAsync();
+        await app.Services.SeedProductsDataAsync();
+        await app.Services.SeedAccountsDataAsync();
+    }
 
-	app.UseFastEndpoints(c =>
-	{
-		c.Serializer.Options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-	});
-
-	app.UseSwaggerGen();
-
-	if (app.Environment.IsDevelopment())
-	{
-		await app.Services.SeedUsersDataAsync();
-		await app.Services.SeedProductsDataAsync();
-	}
-
-	await app.RunAsync();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
-	Log.Fatal(ex, "Application terminated unexpectedly");
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
 finally
 {
-	await Log.CloseAndFlushAsync();
+    await Log.CloseAndFlushAsync();
 }

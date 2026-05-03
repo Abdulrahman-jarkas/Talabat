@@ -6,8 +6,10 @@ namespace Talabat.Users.Data;
 
 public static class DevDataSeeder
 {
-	public static readonly Guid AhmedCustomerId = Guid.Parse("c3d4e5f6-a7b8-9012-cdef-123456789012");
-	public static readonly Guid SaraCustomerId = Guid.Parse("d4e5f6a7-b8c9-0123-defa-234567890123");
+	// Customer IDs are the same as Account IDs (customers are linked by account)
+	public static readonly Guid AdminCustomerId = Guid.Parse("20000000-0000-0000-0000-000000000004");
+	public static readonly Guid OwnerCustomerId = Guid.Parse("20000000-0000-0000-0000-000000000005");
+	public static readonly Guid StaffCustomerId = Guid.Parse("20000000-0000-0000-0000-000000000008");
 
 	public static async Task SeedUsersDataAsync(this IServiceProvider services)
 	{
@@ -17,14 +19,17 @@ public static class DevDataSeeder
 		if (await db.Customers.AnyAsync())
 			return;
 
-		var ahmed = new Customer("ahmed.ali@gmail.com", AhmedCustomerId);
-		ahmed.AddAddress("456 King Fahd Road, Al Olaya, Riyadh 12211");
-		ahmed.AddAddress("12 Prince Sultan Street, Al Rawdah, Jeddah 23432");
+		var adminCustomer = new Customer(AdminCustomerId, "admin@talabat.com");
+		adminCustomer.AddAddress("456 King Fahd Road, Al Olaya, Riyadh 12211");
+		adminCustomer.AddAddress("12 Prince Sultan Street, Al Rawdah, Jeddah 23432");
 
-		var sara = new Customer("sara.mohammed@outlook.com", SaraCustomerId);
-		sara.AddAddress("89 Tahlia Street, Al Sulaimaniyah, Riyadh 12214");
+		var ownerCustomer = new Customer(OwnerCustomerId, "owner@talabat.com");
+		ownerCustomer.AddAddress("89 Tahlia Street, Al Sulaimaniyah, Riyadh 12214");
 
-		db.Customers.AddRange(ahmed, sara);
+		var staffCustomer = new Customer(StaffCustomerId, "staff@talabat.com");
+		staffCustomer.AddAddress("100 Main Street, Al Malaz, Riyadh 12836");
+
+		db.Customers.AddRange(adminCustomer, ownerCustomer, staffCustomer);
 
 		await db.SaveChangesAsync();
 	}

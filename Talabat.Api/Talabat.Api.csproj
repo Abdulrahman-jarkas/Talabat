@@ -16,7 +16,7 @@
 	<ItemGroup>
 		<PackageReference Include="FastEndpoints" Version="7.0.1" />
 		<PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
@@ -25,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Talabat.Accounts\Talabat.Accounts.csproj" />
 		<ProjectReference Include="..\Talabat.Orders\Talabat.Orders.csproj" />
 		<ProjectReference Include="..\Talabat.Products\Talabat.Products.csproj" />
 		<ProjectReference Include="..\Talabat.Payments\Talabat.Payments.csproj" />

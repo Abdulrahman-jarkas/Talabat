@@ -22,7 +22,7 @@ public class CancelCheckoutSessionValidator : Validator<CancelCheckoutSessionReq
 }
 
 [RequiredRole(AuthRoles.Customer)]
-internal class CancelCheckoutSessionEndpoint(ISender sender)
+internal class CancelCheckoutSessionEndpoint(ISender sender, IAccountContext accountContext)
 	: Endpoint<CancelCheckoutSessionRequest>
 {
 	public override void Configure()
@@ -33,8 +33,16 @@ internal class CancelCheckoutSessionEndpoint(ISender sender)
 
 	public override async Task HandleAsync(CancelCheckoutSessionRequest req, CancellationToken ct)
 	{
+		// Customer ID is the Account ID from the token
+		var customerId = accountContext.AccountId;
+		if (customerId is null)
+		{
+			HttpContext.Response.StatusCode = 401;
+			return;
+		}
+
 		var result = await sender.Send(
-			new CancelCheckoutSessionCommand(req.CheckoutSessionId), ct);
+			new CancelCheckoutSessionCommand(customerId.Value, req.CheckoutSessionId), ct);
 
 		var (response, statusCode) = result.ToApiResult();
 		await HttpContext.Response.SendAsync(response, statusCode);

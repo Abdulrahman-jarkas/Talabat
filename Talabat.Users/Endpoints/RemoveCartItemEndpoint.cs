@@ -10,7 +10,6 @@ namespace Talabat.Users.Endpoints;
 
 public class RemoveCartItemRequest
 {
-	public Guid CustomerId { get; set; }
 	public Guid ProductId { get; set; }
 }
 
@@ -18,13 +17,12 @@ public class RemoveCartItemValidator : Validator<RemoveCartItemRequest>
 {
 	public RemoveCartItemValidator()
 	{
-		RuleFor(x => x.CustomerId).NotEmpty();
 		RuleFor(x => x.ProductId).NotEmpty();
 	}
 }
 
 [RequiredRole(AuthRoles.Customer)]
-internal class RemoveCartItemEndpoint(ISender sender)
+internal class RemoveCartItemEndpoint(ISender sender, IAccountContext accountContext)
 	: Endpoint<RemoveCartItemRequest>
 {
 	public override void Configure()
@@ -35,8 +33,16 @@ internal class RemoveCartItemEndpoint(ISender sender)
 
 	public override async Task HandleAsync(RemoveCartItemRequest req, CancellationToken ct)
 	{
+		// Customer ID is the Account ID from the token
+		var customerId = accountContext.AccountId;
+		if (customerId is null)
+		{
+			HttpContext.Response.StatusCode = 401;
+			return;
+		}
+
 		var result = await sender.Send(
-			new RemoveCartItemCommand(req.CustomerId, req.ProductId), ct);
+			new RemoveCartItemCommand(customerId.Value, req.ProductId), ct);
 
 		var (response, statusCode) = result.ToApiResult();
 		await HttpContext.Response.SendAsync(response, statusCode);

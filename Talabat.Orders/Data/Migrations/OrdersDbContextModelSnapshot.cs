@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Talabat.Orders.Data;
 
 #nullable disable
@@ -19,29 +19,29 @@ namespace Talabat.Orders.Data.Migrations
             modelBuilder
                 .HasDefaultSchema("Orders")
                 .HasAnnotation("ProductVersion", "9.0.4")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Talabat.Orders.Domain.CheckoutSessionAggregate.CheckoutItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CheckoutSessionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("Price");
 
                     b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("ProductId");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("Quantity");
 
                     b.HasKey("Id");
@@ -55,29 +55,28 @@ namespace Talabat.Orders.Data.Migrations
             modelBuilder.Entity("Talabat.Orders.Domain.CheckoutSessionAggregate.CheckoutSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AddressId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("AddressId");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("CustomerId");
 
                     b.Property<Guid?>("PaymentId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("PaymentId");
 
-                    b.Property<Guid>("ShopId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("ShopId");
-
-                    b.Property<uint>("xmin")
+                    b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ShopId");
 
                     b.HasKey("Id");
 
@@ -90,39 +89,38 @@ namespace Talabat.Orders.Data.Migrations
             modelBuilder.Entity("Talabat.Orders.Domain.OrderAggregate.Order", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AddressId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CheckoutSessionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Items")
                         .IsRequired()
-                        .HasColumnType("jsonb")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("Items");
 
-                    b.Property<Guid>("ShopId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("Status");
-
-                    b.Property<uint>("xmin")
+                    b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("Status");
 
                     b.HasKey("Id");
 
@@ -148,18 +146,18 @@ namespace Talabat.Orders.Data.Migrations
                     b.OwnsOne("Talabat.Orders.Domain.CheckoutSessionAggregate.CheckoutSessionLifetime", "Lifetime", b1 =>
                         {
                             b1.Property<Guid>("CheckoutSessionId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<DateTime>("CreatedAt")
-                                .HasColumnType("timestamp with time zone")
+                                .HasColumnType("datetime2")
                                 .HasColumnName("CreatedAt");
 
                             b1.Property<DateTime>("ExpiresAt")
-                                .HasColumnType("timestamp with time zone")
+                                .HasColumnType("datetime2")
                                 .HasColumnName("ExpiresAt");
 
                             b1.Property<int>("StoredStatus")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("Status");
 
                             b1.HasKey("CheckoutSessionId");
@@ -179,14 +177,14 @@ namespace Talabat.Orders.Data.Migrations
                     b.OwnsOne("Talabat.Orders.Domain.OrderAggregate.Payment", "Payment", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("PaymentId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("uniqueidentifier")
                                 .HasColumnName("PaymentId");
 
                             b1.Property<int>("Status")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("PaymentStatus");
 
                             b1.HasKey("OrderId");

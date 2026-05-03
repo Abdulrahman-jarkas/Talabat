@@ -28,7 +28,7 @@ public static class DependencyInjection
 	{
 		services.AddDbContext<ProductsDbContext>(cfg =>
 		{
-			cfg.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+			cfg.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 		});
 
 		services.AddScoped<IProductsRepository, ProductsRepository>();

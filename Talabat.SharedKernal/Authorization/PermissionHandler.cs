@@ -3,26 +3,29 @@ using Microsoft.AspNetCore.Authorization;
 namespace Talabat.SharedKernal.Authorization;
 
 /// <summary>
-/// Authorization handler that checks user claims for required permissions.
+/// Authorization handler that checks permissions from the Accounts module data.
 /// </summary>
 public sealed class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 {
-    private const string PermissionClaimType = "permission";
+    private readonly IAccountContext _accountContext;
 
-    protected override Task HandleRequirementAsync(
+    public PermissionHandler(IAccountContext accountContext)
+    {
+        _accountContext = accountContext;
+    }
+
+    protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        var permissions = context.User.Claims
-            .Where(c => c.Type == PermissionClaimType)
-            .Select(c => c.Value)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Ensure authorization data is loaded before checking
+        var data = await _accountContext.GetAuthorizationDataAsync();
+        if (data is null)
+            return;
 
-        if (permissions.Contains(requirement.Permission))
+        if (_accountContext.HasPermission(requirement.Permission))
         {
             context.Succeed(requirement);
         }
-
-        return Task.CompletedTask;
     }
 }

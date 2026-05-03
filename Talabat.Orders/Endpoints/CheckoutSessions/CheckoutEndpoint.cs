@@ -21,7 +21,7 @@ public class CheckoutResponse
 
 [RequiredRole(AuthRoles.Customer)]
 //[EnforcePlanLimit(Features.OrdersPerDay)]
-internal class CheckoutEndpoint(ISender sender)
+internal class CheckoutEndpoint(ISender sender, IAccountContext accountContext)
 	: Endpoint<CheckoutRequest, CheckoutResponse>
 {
 	public override void Configure()
@@ -32,8 +32,16 @@ internal class CheckoutEndpoint(ISender sender)
 
 	public override async Task HandleAsync(CheckoutRequest req, CancellationToken ct)
 	{
+		// Customer ID is the Account ID from the token
+		var customerId = accountContext.AccountId;
+		if (customerId is null)
+		{
+			HttpContext.Response.StatusCode = 401;
+			return;
+		}
+
 		var result = await sender.Send(
-			new CheckoutCommand(req.CheckoutSessionId, req.AddressId), ct);
+			new CheckoutCommand(customerId.Value, req.CheckoutSessionId, req.AddressId), ct);
 
 		var mapped = result.Then(r => new CheckoutResponse
 		{

@@ -30,7 +30,7 @@ public static class DependencyInjection
 	{
 		services.AddDbContext<OrdersDbContext>(cfg =>
 		{
-			cfg.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+			cfg.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 		});
 
 		services.AddScoped<IOrdersRepository, OrdersRepository>();

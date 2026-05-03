@@ -31,7 +31,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
 				.HasConversion(
 					v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
 					v => (IReadOnlyDictionary<Guid, Reservation>)(JsonSerializer.Deserialize<Dictionary<Guid, Reservation>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<Guid, Reservation>()))
-				.HasColumnType("jsonb")
+				.HasColumnType("nvarchar(max)")
 				.HasColumnName("Reservations");
 
 			stockBuilder.Property(s => s.Reservations)

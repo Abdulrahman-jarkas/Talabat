@@ -22,7 +22,7 @@ public class ShipOrderValidator : Validator<ShipOrderRequest>
 }
 
 [RequiredPermission(OrdersPermissions.Ship)]
-internal class ShipOrderEndpoint(ISender sender)
+internal class ShipOrderEndpoint(ISender sender, IAccountContext accountContext)
 	: Endpoint<ShipOrderRequest>
 {
 	public override void Configure()
@@ -33,7 +33,15 @@ internal class ShipOrderEndpoint(ISender sender)
 
 	public override async Task HandleAsync(ShipOrderRequest req, CancellationToken ct)
 	{
-		var result = await sender.Send(new ShipOrderCommand(req.OrderId), ct);
+		// Shop ID is the Tenant ID from the token
+		var shopId = accountContext.TenantId;
+		if (shopId is null)
+		{
+			HttpContext.Response.StatusCode = 401;
+			return;
+		}
+
+		var result = await sender.Send(new ShipOrderCommand(shopId.Value, req.OrderId), ct);
 
 		var (response, statusCode) = result.ToApiResult();
 		await HttpContext.Response.SendAsync(response, statusCode);

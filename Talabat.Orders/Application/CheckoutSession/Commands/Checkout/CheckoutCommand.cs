@@ -3,6 +3,6 @@ using MediatR;
 
 namespace Talabat.Orders.Application.CheckoutSession.Commands.Checkout;
 
-internal record CheckoutCommand(Guid CheckoutSessionId, Guid AddressId) : IRequest<ErrorOr<CheckoutResult>>;
+internal record CheckoutCommand(Guid CustomerId, Guid CheckoutSessionId, Guid AddressId) : IRequest<ErrorOr<CheckoutResult>>;
 
 internal record CheckoutResult(Guid PaymentId, string PaymentUrl);
