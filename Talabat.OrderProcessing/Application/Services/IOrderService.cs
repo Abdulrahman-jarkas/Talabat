@@ -11,12 +11,9 @@ namespace Talabat.OrderProcessing.Application.Services
 		Task<ErrorOr<OrderDetailsDto>> CreateOrderAsync(CreateOrderRequest request, CancellationToken cancellationToken = default);
 		Task<ErrorOr<string>> StartCheckoutSession(CreateOrderRequest request, CancellationToken cancellationToken = default);
 		Task<ProductResponse?> GetProductDetailsAsync(int productId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> Accept(int orderId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> Reject(int orderId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> Deliver(int orderId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> Ship(int orderId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> Cancel(int orderId, CancellationToken cancellationToken = default);
-		Task<ErrorOr<Success>> CashPay(int orderId, decimal amount, CancellationToken cancellationToken = default);
+		Task<ErrorOr<Success>> Deliver(Guid orderId, CancellationToken cancellationToken = default);
+		Task<ErrorOr<Success>> Ship(Guid orderId, CancellationToken cancellationToken = default);
+		Task<ErrorOr<Success>> Cancel(Guid orderId, CancellationToken cancellationToken = default);
 		Task<ErrorOr<Success>> CreateOrderFromCheckoutSessionAsync(CheckoutSession checkoutSession, CancellationToken cancellationToken = default);
 	}
 }

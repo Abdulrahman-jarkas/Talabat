@@ -6,7 +6,7 @@ namespace Talabat.OrderProcessing.Data.Repositories;
 public class OrderRepository(OrderProcessingDbContext context) : IOrderRepository
 {
 
-	public async Task<Order?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+	public async Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
 		return await context.Orders
 			.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);

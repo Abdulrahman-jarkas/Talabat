@@ -6,7 +6,7 @@ namespace Talabat.OrderProcessing.Data.Repositories;
 public class CheckoutSessionsRepository(OrderProcessingDbContext context) : ICheckoutSessionsRepository
 {
 
-	public async Task<CheckoutSession?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+	public async Task<CheckoutSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
 		return await context.CheckoutSessions
 			.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);

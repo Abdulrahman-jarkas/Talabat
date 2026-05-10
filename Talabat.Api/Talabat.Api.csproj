@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Data\**" />
+	  <Content Remove="Data\**" />
+	  <EmbeddedResource Remove="Data\**" />
+	  <None Remove="Data\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FastEndpoints" Version="7.0.1" />
+		<PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Talabat.Accounts\Talabat.Accounts.csproj" />
+		<ProjectReference Include="..\Talabat.Orders\Talabat.Orders.csproj" />
+		<ProjectReference Include="..\Talabat.Products\Talabat.Products.csproj" />
+		<ProjectReference Include="..\Talabat.Payments\Talabat.Payments.csproj" />
+		<ProjectReference Include="..\Talabat.Users\Talabat.Users.csproj" />
+		<ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
+	</ItemGroup>
+
+</Project>

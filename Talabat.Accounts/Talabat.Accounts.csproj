@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Talabat.Accounts.Contracts\Talabat.Accounts.Contracts.csproj" />
+        <ProjectReference Include="..\Talabat.SharedKernal\Talabat.SharedKernal.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ardalis.GuardClauses" Version="5.0.0" />
+        <PackageReference Include="Duende.AccessTokenManagement" Version="3.1.0" />
+        <PackageReference Include="ErrorOr" Version="2.0.1" />
+        <PackageReference Include="FastEndpoints" Version="7.0.1" />
+        <PackageReference Include="IdentityModel" Version="7.0.0" />
+        <PackageReference Include="MediatR" Version="13.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+    </ItemGroup>
+</Project>
