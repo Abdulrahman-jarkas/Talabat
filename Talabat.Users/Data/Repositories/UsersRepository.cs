@@ -5,6 +5,11 @@ namespace Talabat.Users.Data.Repositories;
 
 internal class UsersRepository(UsersDbContext dbContext) : IUsersRepository
 {
+	public async Task AddAsync(Customer customer, CancellationToken cancellationToken = default)
+	{
+		await dbContext.Customers.AddAsync(customer, cancellationToken);
+	}
+
 	public async Task<Customer?> GetCustomerByIdAsync(Guid customerId, CancellationToken cancellationToken = default)
 	{
 		return await dbContext.Customers

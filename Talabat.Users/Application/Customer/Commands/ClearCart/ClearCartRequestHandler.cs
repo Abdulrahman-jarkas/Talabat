@@ -16,7 +16,7 @@ internal class ClearCartRequestHandler(IUsersRepository usersRepository)
 		if (customer is null)
 			return CustomerErrors.CustomerNotFound;
 
-		var result = customer.ResetCart();
+		var result = customer.ResetCart(raiseEvent: false);
 		if (result.IsError)
 			return result.Errors;
 

@@ -37,8 +37,9 @@ public class ValueJsonConverter<T> : ValueConverter<T, string>
 
 	public ValueJsonConverter(ConverterMappingHints? mappingHints = null)
 		: base(
-			v => JsonSerializer.Serialize(v, JsonOptions),
-			v => JsonSerializer.Deserialize<T>(v, JsonOptions)!,
+			v => v == null ? null! : JsonSerializer.Serialize(v, JsonOptions),
+			v => v == null ? default! : JsonSerializer.Deserialize<T>(v, JsonOptions)!,
+			convertsNulls: true,
 			mappingHints)
 	{
 	}

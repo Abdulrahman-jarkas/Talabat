@@ -6,7 +6,9 @@ namespace Talabat.Orders.Data.Repositories
 	{
 		Task AddAsync(Order order, CancellationToken cancellationToken = default);
 		Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken = default);
+		Task<Order?> GetByIdAsync(Guid orderId, Guid? shopId, Guid? customerId, CancellationToken cancellationToken = default);
 		Task<Order?> GetByCheckoutSessionIdAsync(Guid checkoutSessionId, CancellationToken cancellationToken = default);
+		Task<List<Order>> GetOrdersAsync(Guid? shopId, Guid? customerId, CancellationToken cancellationToken = default);
 		Task<int> CountOrdersTodayByShopAsync(Guid shopId, DateOnly date, CancellationToken cancellationToken = default);
 		Task SaveChangesAsync(CancellationToken cancellationToken = default);
 	}

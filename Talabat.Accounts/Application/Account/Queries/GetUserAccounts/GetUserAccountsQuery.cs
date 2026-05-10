@@ -16,4 +16,4 @@ internal record UserAccountDto(
     string Version,
     List<UserAccountRoleDto> Roles);
 
-internal record UserAccountRoleDto(Guid RoleId, string? RoleName, List<string> Permissions);
+internal record UserAccountRoleDto(Guid RoleId, string? RoleName, IReadOnlyList<string> Permissions);

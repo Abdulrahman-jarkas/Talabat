@@ -11,10 +11,12 @@ internal class OnOrderPlacedEditReservationHandler(ISender sender)
 	public async Task Handle(OrderPlacedEvent notification, CancellationToken cancellationToken)
 	{
 		var editItems = notification.ProductIds
-			.Select(productId => new EditReservationItem(productId, notification.CheckoutSessionId, notification.OrderId))
+			.Select(productId => new EditReservationItem(productId))
 			.ToList();
 
-		var result = await sender.Send(new EditReservationRequest(editItems), cancellationToken);
+		var result = await sender.Send(
+			new EditReservationRequest(notification.CheckoutSessionId, notification.OrderId, editItems),
+			cancellationToken);
 
 		if (result.IsError)
 			throw new EventualConsistencyException(

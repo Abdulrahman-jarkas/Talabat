@@ -1,13 +1,7 @@
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Accounts.Domain.AccountAggregate.ValueObjects;
-
-internal enum TenantType
-{
-    System,
-    Shop,
-    Customer
-}
 
 internal class Tenant : ValueObject
 {
@@ -18,6 +12,11 @@ internal class Tenant : ValueObject
     {
         TenantId = tenantId;
         TenantType = tenantType;
+    }
+
+    internal static Tenant Create(Guid? tenantId, TenantType tenantType)
+    {
+        return new Tenant(tenantId, tenantType);
     }
 
     public override IEnumerable<object> GetEqualityComponents()

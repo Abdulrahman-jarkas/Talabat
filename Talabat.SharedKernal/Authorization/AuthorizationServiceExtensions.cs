@@ -22,6 +22,7 @@ public static class AuthorizationServiceExtensions
         services.AddScoped<IAuthorizationHandler, PermissionHandler>();
         services.AddScoped<IAuthorizationHandler, PlanFeatureHandler>();
         services.AddScoped<IAuthorizationHandler, RoleHandler>();
+        services.AddScoped<IAuthorizationHandler, TenantTypeHandler>();
 
         // Register dynamic policy provider
         services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();

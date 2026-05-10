@@ -15,14 +15,10 @@ internal class CheckoutCommandHandler(
 {
 	public async Task<ErrorOr<CheckoutResult>> Handle(CheckoutCommand command, CancellationToken cancellationToken)
 	{
-		// 1. Get and validate the checkout session
-		var checkoutSession = await checkoutSessionRepository.GetByIdAsync(command.CheckoutSessionId, cancellationToken);
+		// 1. Get the active checkout session for the customer
+		var checkoutSession = await checkoutSessionRepository.GetActiveByCustomerIdAsync(command.CustomerId, cancellationToken);
 
 		if (checkoutSession is null)
-			return CheckoutSessionErrors.NotFound;
-
-		// 2. Verify the checkout session belongs to the requesting customer
-		if (checkoutSession.CustomerId != command.CustomerId)
 			return CheckoutSessionErrors.NotFound;
 
 		if (checkoutSession.Lifetime.IsExpired)

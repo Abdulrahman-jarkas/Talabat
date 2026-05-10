@@ -11,6 +11,7 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
     private const string PermissionPolicyPrefix = "Permission:";
     private const string PlanFeaturePolicyPrefix = "PlanFeature:";
     private const string RolePolicyPrefix = "Role:";
+    private const string TenantTypePolicyPrefix = "TenantType:";
 
     private readonly DefaultAuthorizationPolicyProvider _fallbackPolicyProvider;
 
@@ -48,6 +49,15 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
             return Task.FromResult<AuthorizationPolicy?>(policy);
         }
 
+        if (policyName.StartsWith(TenantTypePolicyPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var tenantType = policyName[TenantTypePolicyPrefix.Length..];
+            var policy = new AuthorizationPolicyBuilder()
+                .AddRequirements(new AccountVersionRequirement(), new TenantTypeRequirement(tenantType))
+                .Build();
+            return Task.FromResult<AuthorizationPolicy?>(policy);
+        }
+
         return _fallbackPolicyProvider.GetPolicyAsync(policyName);
     }
 
@@ -75,4 +85,9 @@ public sealed class AuthorizationPolicyProvider : IAuthorizationPolicyProvider
     /// Gets the policy name for a role.
     /// </summary>
     public static string GetRolePolicyName(string role) => $"{RolePolicyPrefix}{role}";
+
+    /// <summary>
+    /// Gets the policy name for a tenant type.
+    /// </summary>
+    public static string GetTenantTypePolicyName(TenantType tenantType) => $"{TenantTypePolicyPrefix}{tenantType}";
 }

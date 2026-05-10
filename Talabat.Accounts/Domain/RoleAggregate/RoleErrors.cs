@@ -23,4 +23,9 @@ internal static class RoleErrors
         Error.Conflict(
             code: "Role.InUse",
             description: "Cannot delete a role that is assigned to accounts.");
+
+    public static Error ConcurrencyConflict =>
+        Error.Conflict(
+            code: "Role.ConcurrencyConflict",
+            description: "The role was modified by another user. Please reload and try again.");
 }

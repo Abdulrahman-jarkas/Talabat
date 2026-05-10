@@ -9,7 +9,8 @@ internal class GetRolesQueryHandler(IRolesRepository rolesRepository)
 {
     public async Task<ErrorOr<List<RoleDto>>> Handle(GetRolesQuery query, CancellationToken cancellationToken)
     {
-        var roles = await rolesRepository.GetByTenantAsync(query.TenantId, cancellationToken);
+        var tenantTypeStr = query.TenantType?.ToString();
+        var roles = await rolesRepository.GetByTenantReadOnlyAsync(tenantTypeStr, query.TenantId, cancellationToken);
 
         var dtos = roles.Select(r => new RoleDto(
             r.Id,
@@ -17,6 +18,8 @@ internal class GetRolesQueryHandler(IRolesRepository rolesRepository)
             r.Permissions,
             r.Tenant.TenantId,
             r.Tenant.TenantType.ToString(),
+            Convert.ToBase64String(r.Version),
+            r.IsDefault,
             r.CreatedBy,
             r.CreatedAt,
             r.ModifiedBy,

@@ -9,20 +9,19 @@ internal class GetUserAccountsQueryHandler(IAccountsRepository accountsRepositor
 {
     public async Task<ErrorOr<List<UserAccountDto>>> Handle(GetUserAccountsQuery query, CancellationToken cancellationToken)
     {
-        var accounts = await accountsRepository.GetUserAccountsAsync(
-            query.UserId, query.TenantType, query.TenantId, cancellationToken);
+        var accounts = await accountsRepository.GetUserAccountsReadOnlyAsync(query.UserId, cancellationToken);
 
         // Collect all role IDs across all accounts and load them in a single query
         var allRoleIds = accounts
-            .SelectMany(a => a.AccountRoles.Select(ar => ar.RoleId))
+            .SelectMany(a => a.Assignments.Select(ar => ar.RoleId))
             .Distinct();
 
-        var rolesList = await rolesRepository.GetByIdsAsync(allRoleIds, cancellationToken);
+        var rolesList = await rolesRepository.GetByIdsReadOnlyAsync(allRoleIds, cancellationToken);
         var roles = rolesList.ToDictionary(r => r.Id);
 
         var dtos = accounts.Select(a =>
         {
-            var accountRoles = a.AccountRoles
+            var accountRoles = a.Assignments
                 .Where(ar => roles.ContainsKey(ar.RoleId))
                 .Select(ar =>
                 {

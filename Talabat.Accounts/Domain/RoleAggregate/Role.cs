@@ -3,26 +3,33 @@ using ErrorOr;
 using Talabat.Accounts.Domain.AccountAggregate.ValueObjects;
 using Talabat.Accounts.Domain.RoleAggregate.Events;
 using Talabat.SharedKernal;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Accounts.Domain.RoleAggregate;
 
 internal class Role : AggregateRoot
 {
     public string Name { get; private set; } = null!;
-    public List<string> Permissions { get; private set; } = new();
+
+    private List<string> _permissions = new();
+    public IReadOnlyList<string> Permissions => _permissions.AsReadOnly();
+
     public Tenant Tenant { get; private set; } = null!;
+    public bool IsDefault { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public Guid? ModifiedBy { get; private set; }
     public DateTime? ModifiedAt { get; private set; }
     public bool IsDeleted { get; private set; }
+    public byte[] Version { get; private set; } = null!;
 
     internal static ErrorOr<Role> Create(
         string name,
         List<string> permissions,
         Guid? tenantId,
         TenantType tenantType,
-        Guid createdBy)
+        Guid createdBy,
+        bool isDefault = false)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrEmpty(permissions);
@@ -36,8 +43,9 @@ internal class Role : AggregateRoot
         var role = new Role(Guid.NewGuid())
         {
             Name = name,
-            Permissions = permissions,
-            Tenant = new Tenant(tenantId, tenantType),
+            _permissions = permissions,
+            Tenant = Tenant.Create(tenantId, tenantType),
+            IsDefault = isDefault,
             CreatedBy = createdBy,
             CreatedAt = DateTime.UtcNow,
             IsDeleted = false
@@ -61,7 +69,7 @@ internal class Role : AggregateRoot
     {
         Guard.Against.NullOrEmpty(permissions);
 
-        Permissions = permissions;
+        _permissions = permissions;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
 
@@ -81,6 +89,11 @@ internal class Role : AggregateRoot
         _domainEvents.Add(new RoleDeletedEvent(Id, Tenant.TenantId));
 
         return Result.Success;
+    }
+
+    public void MarkAsDefault()
+    {
+        IsDefault = true;
     }
 
     private Role(Guid id) : base(id) { }

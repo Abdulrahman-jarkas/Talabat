@@ -81,19 +81,16 @@ internal class Product : AggregateRoot
     public ErrorOr<Success> UpdatePrice(decimal newPrice)
     {
         BasePrice = Guard.Against.NegativeOrZero(newPrice);
-        Stock = Stock.RemoveAllUnpaidReservations();
         _domainEvents.Add(new ProductPriceChangedEvent(Id, BasePrice));
-        _domainEvents.Add(new ProductQuantityChangedEvent(Id, Stock.EffectiveQuantity));
         return Result.Success;
     }
 
 	public ErrorOr<Success> SoftDelete()
 	{
-		if (Stock.HasPaidReservations)
-			return ProductErrors.HasPaidReservations(Id);
+		if (Stock.HasAnyReservations)
+			return ProductErrors.HasActiveReservations(Id);
 
 		IsDeleted = true;
-		Stock = Stock.RemoveAllUnpaidReservations();
 		_domainEvents.Add(new ProductSoftDeletedEvent(Id));
 		return Result.Success;
 	}

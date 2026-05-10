@@ -9,7 +9,6 @@ namespace Talabat.Orders.Endpoints.CheckoutSessions;
 
 public class CheckoutRequest
 {
-	public Guid CheckoutSessionId { get; set; }
 	public Guid AddressId { get; set; }
 }
 
@@ -41,7 +40,7 @@ internal class CheckoutEndpoint(ISender sender, IAccountContext accountContext)
 		}
 
 		var result = await sender.Send(
-			new CheckoutCommand(customerId.Value, req.CheckoutSessionId, req.AddressId), ct);
+			new CheckoutCommand(customerId.Value, req.AddressId), ct);
 
 		var mapped = result.Then(r => new CheckoutResponse
 		{

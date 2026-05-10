@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Talabat.Accounts.Domain.AccountAggregate;
 
@@ -21,6 +19,9 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
             user.HasIndex(u => u.UserId);
         });
 
+        builder.Navigation(a => a.User)
+            .IsRequired();
+
         builder.OwnsOne(a => a.Tenant, tenant =>
         {
             tenant.Property(t => t.TenantId).HasColumnName("TenantId");
@@ -31,17 +32,22 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.LastModifiedAt).IsRequired();
         builder.Property(a => a.Version).IsRowVersion();
 
-        builder.Property(a => a.AccountRoles)
-            .HasColumnName("AccountRoles")
-            .HasColumnType("nvarchar(max)")
-            .HasConversion(
-                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<IReadOnlyCollection<AccountRole>>(v, (JsonSerializerOptions?)null) ?? new List<AccountRole>(),
-                new ValueComparer<IReadOnlyCollection<AccountRole>>(
-                    (c1, c2) => JsonSerializer.Serialize(c1, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(c2, (JsonSerializerOptions?)null),
-                    c => JsonSerializer.Serialize(c, (JsonSerializerOptions?)null).GetHashCode(),
-                    c => JsonSerializer.Deserialize<IReadOnlyCollection<AccountRole>>(
-                        JsonSerializer.Serialize(c, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!));
+        builder.OwnsMany(a => a.Assignments, assignment =>
+        {
+            assignment.ToTable("AccountAssignments", "Accounts");
+            assignment.HasKey(a => a.Id);
+            assignment.WithOwner().HasForeignKey("AccountId");
+            assignment.Property<Guid>("AccountId").IsRequired();
+            assignment.Property(a => a.RoleId).IsRequired();
+            assignment.Property(a => a.AssignedBy).IsRequired();
+            assignment.Property(a => a.AssignedAt).IsRequired();
+
+            assignment.HasIndex(a => a.RoleId);
+            assignment.HasIndex("AccountId");
+        });
+
+        builder.Navigation(a => a.Assignments)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasQueryFilter(a => !a.IsDeleted);
     }

@@ -1,9 +1,10 @@
 using ErrorOr;
 using MediatR;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Accounts.Application.Account.Queries.GetAccounts;
 
-internal record GetAccountsQuery(Guid? TenantId) : IRequest<ErrorOr<List<AccountDto>>>;
+internal record GetAccountsQuery(TenantType? TenantType, Guid? TenantId) : IRequest<ErrorOr<List<AccountDto>>>;
 
 internal record AccountDto(
     Guid Id,
@@ -12,6 +13,7 @@ internal record AccountDto(
     string Email,
     Guid? TenantId,
     string TenantType,
-    List<AccountRoleDto> Roles);
+    string Version,
+    List<AssignmentDto> Assignments);
 
-internal record AccountRoleDto(Guid RoleId, string? RoleName, Guid AssignedBy, DateTime AssignedAt);
+internal record AssignmentDto(Guid Id, Guid RoleId, string? RoleName, Guid AssignedBy, DateTime AssignedAt);

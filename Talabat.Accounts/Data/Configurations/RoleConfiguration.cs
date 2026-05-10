@@ -13,13 +13,16 @@ internal class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasKey(r => r.Id);
 
         builder.Property(r => r.Name).HasMaxLength(256).IsRequired();
+
         builder.Property(r => r.Permissions)
+            .HasField("_permissions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
             .HasColumnType("nvarchar(max)")
             .IsRequired()
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>(),
-                new ValueComparer<List<string>>(
+                new ValueComparer<IReadOnlyList<string>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
@@ -30,11 +33,13 @@ internal class RoleConfiguration : IEntityTypeConfiguration<Role>
             tenant.Property(t => t.TenantType).HasColumnName("TenantType").HasConversion<string>().HasMaxLength(50).IsRequired();
         });
 
+        builder.Property(r => r.IsDefault).IsRequired().HasDefaultValue(false);
         builder.Property(r => r.CreatedBy).IsRequired();
         builder.Property(r => r.CreatedAt).IsRequired();
         builder.Property(r => r.ModifiedBy);
         builder.Property(r => r.ModifiedAt);
         builder.Property(r => r.IsDeleted).IsRequired().HasDefaultValue(false);
+        builder.Property(r => r.Version).IsRowVersion();
 
         builder.HasQueryFilter(r => !r.IsDeleted);
     }

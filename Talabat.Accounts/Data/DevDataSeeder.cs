@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Talabat.Accounts.Domain.AccountAggregate;
 using Talabat.Accounts.Domain.AccountAggregate.ValueObjects;
+using Talabat.SharedKernal.Authorization;
 using Talabat.Accounts.Domain.RoleAggregate;
 using Talabat.SharedKernal;
 
@@ -114,7 +115,7 @@ public static class DevDataSeeder
             null,
             TenantType.System);
 
-        adminAccount.SetRoles([adminRole.Id], Guid.Empty);
+        adminAccount.UpdateAssignments([adminRole.Id], Guid.Empty);
 
         var shopOwnerAccount = Account.Create(
             Guid.Parse(Users.Owner),
@@ -123,7 +124,7 @@ public static class DevDataSeeder
             Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890"), // AlBaik shop ID
             TenantType.Shop);
 
-        shopOwnerAccount.SetRoles([shopOwnerRole.Id], Guid.Empty);
+        shopOwnerAccount.UpdateAssignments([shopOwnerRole.Id], Guid.Empty);
 
         // Customer accounts for all users
         var adminCustomerAccount = Account.Create(
@@ -133,7 +134,7 @@ public static class DevDataSeeder
             null,
             TenantType.System);
 
-        adminCustomerAccount.SetRoles([customerRole.Id], Guid.Empty);
+        adminCustomerAccount.UpdateAssignments([customerRole.Id], Guid.Empty);
 
         var ownerCustomerAccount = Account.Create(
             Guid.Parse(Users.Owner),
@@ -142,7 +143,7 @@ public static class DevDataSeeder
             null,
             TenantType.System);
 
-        ownerCustomerAccount.SetRoles([customerRole.Id], Guid.Empty);
+        ownerCustomerAccount.UpdateAssignments([customerRole.Id], Guid.Empty);
 
         var staffCustomerAccount = Account.Create(
             Guid.Parse(Users.Staff),
@@ -151,7 +152,7 @@ public static class DevDataSeeder
             null,
             TenantType.System);
 
-        staffCustomerAccount.SetRoles([customerRole.Id], Guid.Empty);
+        staffCustomerAccount.UpdateAssignments([customerRole.Id], Guid.Empty);
 
 
         db.Accounts.AddRange(adminAccount, shopOwnerAccount, adminCustomerAccount, ownerCustomerAccount, staffCustomerAccount);

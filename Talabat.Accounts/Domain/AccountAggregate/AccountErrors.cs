@@ -14,4 +14,8 @@ internal static class AccountErrors
             code: "Account.AlreadyDeleted",
             description: "Account has already been removed.");
 
-    }
+    public static Error ConcurrencyConflict =>
+        Error.Conflict(
+            code: "Account.ConcurrencyConflict",
+            description: "The account was modified by another user. Please reload and try again.");
+}

@@ -9,8 +9,9 @@ internal class GetAccountsQueryHandler(IAccountsRepository accountsRepository, I
 {
     public async Task<ErrorOr<List<AccountDto>>> Handle(GetAccountsQuery query, CancellationToken cancellationToken)
     {
-        var accounts = await accountsRepository.GetAccountsByTenantAsync(query.TenantId, cancellationToken);
-        var roles = await rolesRepository.GetByTenantAsync(query.TenantId, cancellationToken);
+        var tenantTypeStr = query.TenantType?.ToString();
+        var accounts = await accountsRepository.GetAccountsByTenantReadOnlyAsync(tenantTypeStr, query.TenantId, cancellationToken);
+        var roles = await rolesRepository.GetByTenantReadOnlyAsync(tenantTypeStr, query.TenantId, cancellationToken);
         var roleNames = roles.ToDictionary(r => r.Id, r => r.Name);
 
         var dtos = accounts.Select(a => new AccountDto(
@@ -20,7 +21,9 @@ internal class GetAccountsQueryHandler(IAccountsRepository accountsRepository, I
             a.User.Email,
             a.Tenant.TenantId,
             a.Tenant.TenantType.ToString(),
-            a.AccountRoles.Select(ar => new AccountRoleDto(
+            Convert.ToBase64String(a.Version),
+            a.Assignments.Select(ar => new AssignmentDto(
+                ar.Id,
                 ar.RoleId,
                 roleNames.GetValueOrDefault(ar.RoleId),
                 ar.AssignedBy,

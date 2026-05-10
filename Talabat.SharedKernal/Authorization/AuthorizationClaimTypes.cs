@@ -29,7 +29,7 @@ public static class AuthorizationClaimTypes
     /// Claim type for tenant type ("customer" | "shop" | "system").
     /// When tenant_type is "shop", the tenant_id contains the shop ID.
     /// </summary>
-    public const string TenantType = "tenant_type";
+    public const string TenantType = "account_tenant_type";
 
     /// <summary>
     /// Claim type for tenant ID (Shop/Warehouse GUID when tenant_type is "shop", empty string for customer/system).

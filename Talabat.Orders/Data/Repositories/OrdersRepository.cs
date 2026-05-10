@@ -17,6 +17,26 @@ internal class OrdersRepository(OrdersDbContext context) : IOrdersRepository
 			.FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 	}
 
+	public Task<Order?> GetByIdAsync(Guid orderId, Guid? shopId, Guid? customerId, CancellationToken cancellationToken = default)
+	{
+		var query = context.Orders.AsQueryable();
+		if (shopId.HasValue)
+			query = query.Where(o => o.ShopId == shopId.Value);
+		if (customerId.HasValue)
+			query = query.Where(o => o.CustomerId == customerId.Value);
+		return query.FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
+	}
+
+	public Task<List<Order>> GetOrdersAsync(Guid? shopId, Guid? customerId, CancellationToken cancellationToken = default)
+	{
+		var query = context.Orders.AsQueryable();
+		if (shopId.HasValue)
+			query = query.Where(o => o.ShopId == shopId.Value);
+		if (customerId.HasValue)
+			query = query.Where(o => o.CustomerId == customerId.Value);
+		return query.ToListAsync(cancellationToken);
+	}
+
 	public Task<Order?> GetByCheckoutSessionIdAsync(Guid checkoutSessionId, CancellationToken cancellationToken = default)
 	{
 		return context.Orders

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Talabat.Accounts.Application.Account.Services;
 using Talabat.Accounts.Authorization;
 using Talabat.Accounts.Data;
 using Talabat.Accounts.Data.Repositories;
@@ -14,6 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddAccountsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddPersistence(configuration)
+            .AddIdentityHttpClient(configuration)
             .AddMediatR()
             .AddAuthorization()
             .AddEndpoints();
@@ -30,6 +32,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAccountsRepository, AccountsRepository>();
         services.AddScoped<IRolesRepository, RolesRepository>();
+        services.AddScoped<IIdentityUserService, IdentityUserService>();
 
         return services;
     }
@@ -37,6 +40,31 @@ public static class DependencyInjection
     public static IServiceCollection AddMediatR(this IServiceCollection services)
     {
         services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining(typeof(DependencyInjection)));
+
+        return services;
+    }
+
+    private static IServiceCollection AddIdentityHttpClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        var identityOptions = configuration
+            .GetSection(IdentityClientOptions.SectionName)
+            .Get<IdentityClientOptions>()!;
+
+        services.AddDistributedMemoryCache();
+
+        services.AddClientCredentialsTokenManagement()
+            .AddClient("identity", client =>
+            {
+                client.TokenEndpoint = identityOptions.TokenEndpoint;
+                client.ClientId = identityOptions.ClientId;
+                client.ClientSecret = identityOptions.ClientSecret;
+                client.Scope = identityOptions.Scope;
+            });
+
+        services.AddClientCredentialsHttpClient("identity.api", "identity", client =>
+        {
+            client.BaseAddress = new Uri(identityOptions.BaseAddress);
+        });
 
         return services;
     }

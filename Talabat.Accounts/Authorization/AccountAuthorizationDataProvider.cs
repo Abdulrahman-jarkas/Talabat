@@ -16,6 +16,7 @@ internal class AccountAuthorizationDataProvider : IAccountAuthorizationDataProvi
     public async Task<AccountAuthorizationData?> GetAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         var account = await _dbContext.Accounts
+            .Include(a => a.Assignments)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
 
@@ -23,7 +24,7 @@ internal class AccountAuthorizationDataProvider : IAccountAuthorizationDataProvi
             return null;
 
         // Load roles for this account's role IDs
-        var roleIds = account.AccountRoles.Select(ar => ar.RoleId).ToList();
+        var roleIds = account.Assignments.Select(ar => ar.RoleId).ToList();
 
         var roles = await _dbContext.Roles
             .AsNoTracking()

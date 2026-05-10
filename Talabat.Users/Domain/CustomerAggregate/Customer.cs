@@ -2,6 +2,7 @@
 using ErrorOr;
 using Talabat.SharedKernal;
 using Talabat.Users.Domain.CustomerAggregate.Cart;
+using Talabat.Users.Domain.CustomerAggregate.Events;
 using CartEntity = Talabat.Users.Domain.CustomerAggregate.Cart.Cart;
 
 namespace Talabat.Users.Domain.CustomerAggregate;
@@ -21,9 +22,12 @@ internal class Customer : AggregateRoot
 		Email = Guard.Against.NullOrEmpty(email, nameof(email));
 	}
 
-	public ErrorOr<Success> ResetCart()
+	public ErrorOr<Success> ResetCart(bool raiseEvent = true)
 	{
 		Cart = null;
+
+		if (raiseEvent)
+			_domainEvents.Add(new CartChangedEvent(Id));
 
 		return Result.Success;
 	}
@@ -41,6 +45,7 @@ internal class Customer : AggregateRoot
 			return result.Errors;
 
 		Cart = result.Value;
+		_domainEvents.Add(new CartChangedEvent(Id));
 		return Result.Updated;
 	}
 
@@ -54,6 +59,7 @@ internal class Customer : AggregateRoot
 			return result.Errors;
 
 		Cart = result.Value;
+		_domainEvents.Add(new CartChangedEvent(Id));
 		return Result.Updated;
 	}
 
@@ -61,6 +67,16 @@ internal class Customer : AggregateRoot
 	{
 		var customerAddress = new CustomerAddress(address);
 		_addresses.Add(customerAddress);
+	}
+
+	public ErrorOr<Success> RemoveAddress(Guid addressId)
+	{
+		var address = _addresses.FirstOrDefault(a => a.Id == addressId);
+		if (address is null)
+			return Error.NotFound("Customer.AddressNotFound", "Address not found.");
+
+		_addresses.Remove(address);
+		return Result.Success;
 	}
 
 	private Customer()

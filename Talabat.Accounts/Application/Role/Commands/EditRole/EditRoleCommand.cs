@@ -8,4 +8,5 @@ internal record EditRoleCommand(
     string Name,
     List<string> Permissions,
     Guid? TenantId,
-    Guid ModifiedBy) : IRequest<ErrorOr<Success>>;
+    Guid ModifiedBy,
+    string Version) : IRequest<ErrorOr<MutationResult>>;

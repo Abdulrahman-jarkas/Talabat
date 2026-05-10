@@ -19,7 +19,7 @@ internal class EditReservationRequestHandler(IProductsRepository productsReposit
 			if (product is null)
 				return Domain.ProductErrors.NotFound(item.ProductId);
 
-			var result = product.EditReservation(item.CheckoutSessionId, item.OrderId);
+			var result = product.EditReservation(request.CheckoutSessionId, request.OrderId);
 			if (result.IsError)
 				return result.Errors;
 		}

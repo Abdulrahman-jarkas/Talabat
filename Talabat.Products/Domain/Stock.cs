@@ -11,6 +11,7 @@ internal class Stock : ValueObject
 		= new Dictionary<Guid, Reservation>();
 
 	public int EffectiveQuantity => Quantity - Reservations.Values.Sum(r => r.Quantity);
+	public bool HasAnyReservations => Reservations.Count > 0;
 	public bool HasPaidReservations => Reservations.Values.Any(r => r.OrderId is not null);
 
 	private Stock(int quantity, Dictionary<Guid, Reservation> reservations)

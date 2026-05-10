@@ -77,7 +77,8 @@ internal class Order : AggregateRoot
 
 		Status = result.Value;
 
-		_domainEvents.Add(new OrderCancelledEvent(Id, ShopId, CustomerId, Payment.PaymentId));
+		_domainEvents.Add(new OrderCancelledEvent(Id, ShopId, CustomerId, Payment.PaymentId,
+			CheckoutSessionId, _items.Select(i => i.ProductId).ToList()));
 
 		return Result.Success;
 	}

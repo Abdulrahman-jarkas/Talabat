@@ -10,6 +10,14 @@ internal class ProductsRepository(ProductsDbContext context) : IProductsReposito
 		return await context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 	}
 
+	public async Task<Product?> GetProductByIdAsync(Guid id, Guid? tenantId, CancellationToken cancellationToken = default)
+	{
+		var query = context.Products.AsQueryable();
+		if (tenantId.HasValue)
+			query = query.Where(p => p.ShopId == tenantId.Value);
+		return await query.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+	}
+
 	public Task<List<Product>> GetProductsByIdsAsync(IReadOnlyList<Guid> productIds, CancellationToken cancellationToken = default)
 	{
 		return context.Products
@@ -22,6 +30,13 @@ internal class ProductsRepository(ProductsDbContext context) : IProductsReposito
 		return await context.Products
 			.AsNoTracking()
 			.Where(p => p.ShopId == shopId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Product>> GetAllProductsAsync(CancellationToken cancellationToken = default)
+	{
+		return await context.Products
+			.AsNoTracking()
 			.ToListAsync(cancellationToken);
 	}
 

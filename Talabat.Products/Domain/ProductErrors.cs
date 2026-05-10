@@ -9,8 +9,8 @@ internal static class ProductErrors
 			"Product.NotFound",
 			$"Product '{productId}' was not found.");
 
-	public static Error HasPaidReservations(Guid productId) =>
+	public static Error HasActiveReservations(Guid productId) =>
 		Error.Conflict(
-			"Product.HasPaidReservations",
-			$"Product '{productId}' cannot be deleted because it has paid reservations.");
+			"Product.HasActiveReservations",
+			$"Product '{productId}' cannot be deleted because it has active reservations.");
 }

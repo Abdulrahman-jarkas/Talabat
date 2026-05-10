@@ -1,6 +1,6 @@
 using ErrorOr;
 using MediatR;
-using Talabat.Accounts.Domain.AccountAggregate.ValueObjects;
+using Talabat.SharedKernal.Authorization;
 
 namespace Talabat.Accounts.Application.Role.Commands.AddRole;
 
@@ -9,4 +9,4 @@ internal record AddRoleCommand(
     List<string> Permissions,
     Guid? TenantId,
     TenantType TenantType,
-    Guid CreatedBy) : IRequest<ErrorOr<Guid>>;
+    Guid CreatedBy) : IRequest<ErrorOr<MutationResult>>;

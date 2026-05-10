@@ -2,4 +2,4 @@ using Talabat.SharedKernal;
 
 namespace Talabat.Accounts.Domain.AccountAggregate.Events;
 
-internal record AccountRemovedEvent(Guid AccountId, Guid UserId) : IDomainEvent;
+internal record AccountRemovedEvent(Guid AccountId, IReadOnlyCollection<Guid> PreviousRoleIds) : IDomainEvent;

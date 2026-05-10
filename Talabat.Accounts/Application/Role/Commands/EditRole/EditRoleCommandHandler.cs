@@ -1,20 +1,24 @@
 using ErrorOr;
 using MediatR;
+using Talabat.Accounts.Data;
 using Talabat.Accounts.Data.Repositories;
 using Talabat.Accounts.Domain.RoleAggregate;
-using Talabat.SharedKernal;
 
 namespace Talabat.Accounts.Application.Role.Commands.EditRole;
 
 internal class EditRoleCommandHandler(IRolesRepository rolesRepository)
-    : IRequestHandler<EditRoleCommand, ErrorOr<Success>>
+    : IRequestHandler<EditRoleCommand, ErrorOr<MutationResult>>
 {
-    public async Task<ErrorOr<Success>> Handle(EditRoleCommand command, CancellationToken cancellationToken)
+    public async Task<ErrorOr<MutationResult>> Handle(EditRoleCommand command, CancellationToken cancellationToken)
     {
-        var role = await rolesRepository.GetByIdAsync(command.RoleId, cancellationToken);
+        var role = await rolesRepository.GetByIdAsync(command.RoleId, command.TenantId, cancellationToken);
 
-        if (role is null || role.Tenant.TenantId != command.TenantId)
+        if (role is null)
             return RoleErrors.NotFound;
+
+        var versionCheck = ConcurrencyExtensions.EnsureVersion(role.Version, command.Version, () => RoleErrors.ConcurrencyConflict);
+        if (versionCheck.IsError)
+            return versionCheck.Errors;
 
         var updateResult = role.Update(command.Name, command.ModifiedBy);
         if (updateResult.IsError)
@@ -27,12 +31,9 @@ internal class EditRoleCommandHandler(IRolesRepository rolesRepository)
                 return permResult.Errors;
         }
 
-        using var scope = ModuleTransactionScope.Create();
-
-        await rolesRepository.SaveChangesAsync(cancellationToken);
-
-        scope.Complete();
-
-        return Result.Success;
+        return await rolesRepository.SaveWithConcurrencyAsync(
+            () => new MutationResult(role.Id, Convert.ToBase64String(role.Version)),
+            () => RoleErrors.ConcurrencyConflict,
+            cancellationToken);
     }
 }
